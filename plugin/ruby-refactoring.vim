@@ -63,7 +63,7 @@ endfunction
 " Synopsis
 "   Extracts the selected scope into a method above the scope of the
 "   current method
-function! ExtractMethod()
+function! ExtractMethod() range
   try
     let name = s:get_input("Method name: ", "No method name given!")
   catch
@@ -72,10 +72,23 @@ function! ExtractMethod()
   endtry
 
   normal! gv
-  normal "ay
-  exec "normal c$" . name
+
+  " Yank & Replace selected range with the method name
+  exec "normal C" . name
+  " Mark source position so we can jump back afterwards
+  " XXX: ideally shouldn't clobber this
+  normal ma
+
   exec "?\\<def\\>"
-  exec "normal! O" . "def " . name . "\n\<Tab>" . @a . "\nend\n"
+
+  " Mark current position for reindenting the source
+  " XXX: ideally shouldn't clobber this
+  normal mb 
+
+  exec "normal! O" . "def " . name . "\nend\n"
+  " Paste yanked range, select entire method & reindent, and jump back to
+  " starting position
+  normal kPV`b=`a
 endfunction
 
 function! InlineTemp()
