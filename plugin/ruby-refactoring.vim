@@ -74,7 +74,7 @@ function! ExtractMethod()
   normal! gv
   normal "ay
   exec "normal c$" . name
-  exec "?def "
+  exec "?\\<def\\>"
   exec "normal! O" . "def " . name . "\n\<Tab>" . @a . "\nend\n"
 endfunction
 
