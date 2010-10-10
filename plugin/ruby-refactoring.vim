@@ -61,6 +61,46 @@ function! ExtractLocalVariable()
 endfunction
 
 " Synopsis
+"   Rename the selected local variable 
+function! RenameLocalVariable()
+  try
+    let name = s:get_input("Rename to: ", "No variable name given!" )
+  catch
+    echo v:exception
+    return
+  endtry
+
+  " Backup @a 
+  let old_register_a = @a
+
+  normal! gv
+
+  " Yank the variable name into it
+  normal "ay
+
+  " Mark current caret position
+  " FIXME: This doesn't capure column properly, because we're in visual mode
+  let cursor_position = getpos(".")
+
+  " Find the start ...
+  exec '?\<def\>'
+  let block_start = line(".")
+
+  " ... and end of the current block
+  normal %
+  let block_end = line(".")
+
+  " Rename the variable within the range of the block
+  exec ':' . block_start . ',' . block_end . 's/\<\zs' . @a . '\>\ze[^\(]/' . name . '/'
+
+  " Restore @a
+  let @a = old_register_a
+
+  " Restore caret position
+  call setpos(".",cursor_position) 
+endfunction
+
+" Synopsis
 "   Extracts the selected scope into a method above the scope of the
 "   current method
 function! ExtractMethod() range
@@ -121,5 +161,6 @@ endfunction
 
 nnoremap <leader>rap :call AddParameter()<cr>
 vnoremap <leader>relv :call ExtractLocalVariable()<cr>
+vnoremap <leader>rrlv :call RenameLocalVariable()<cr>
 vnoremap <leader>rem :call ExtractMethod()<cr>
 nnoremap <leader>rit :call InlineTemp()<cr>
