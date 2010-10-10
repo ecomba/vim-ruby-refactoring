@@ -19,7 +19,9 @@ function! s:get_input(message, error_message)
 endfunction
 
 " Patterns
-"
+
+" Synopsis
+"   Adds a parameter (or many separated with commas) to a method
 function! AddParameter()
   try
     let name = s:get_input("Parameter name: ", "No parameter name given!")
@@ -37,6 +39,8 @@ function! AddParameter()
   endif
 endfunction
 
+" Synopsis
+"   Extracts the selected scope to a variable
 function! ExtractLocalVariable()
   try
     let name = s:get_input("Variable name: ", "No variable name given!")
@@ -56,6 +60,9 @@ function! ExtractLocalVariable()
   normal! $p
 endfunction
 
+" Synopsis
+"   Extracts the selected scope into a method above the scope of the
+"   current method
 function! ExtractMethod()
   try
     let name = s:get_input("Method name: ", "No method name given!")
@@ -67,7 +74,7 @@ function! ExtractMethod()
   normal! gv
   normal "ay
   exec "normal c$" . name
-  exec "?\def"
+  exec "?\def "
   exec "normal! O" . "def " . name . "\n\<Tab>" . @a . "\nend\n"
 endfunction
 
