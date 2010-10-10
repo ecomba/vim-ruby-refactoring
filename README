@@ -21,8 +21,9 @@ I will go with it (clone at your own risk).
 
 Implemented patterns:
 
-- Add Parameter: <leader>ap
-- Extract Local Variable: <leader>elv (works if the variable is selected in visual mode)
-- Inline Temp: <leader>:it
+- Add Parameter: <leader>rap
+- Extract Local Variable: <leader>relv (works if the variable is selected in visual mode)
+- Extract Method: <leader>rem (visual mode selection)
+- Inline Temp: <leader>rit
 
 Enrique Comba Riepenhausen

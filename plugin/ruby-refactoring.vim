@@ -105,7 +105,7 @@ endfunction
 " pattern to be used.
 " I.e. Extract Method would be mapped to <leader>em
 
-nnoremap <leader>ap :call AddParameter()<cr>
-vnoremap <leader>elv :call ExtractLocalVariable()<cr>
-vnoremap <leader>em :call ExtractMethod()<cr>
-nnoremap <leader>it :call InlineTemp()<cr>
+nnoremap <leader>rap :call AddParameter()<cr>
+vnoremap <leader>relv :call ExtractLocalVariable()<cr>
+vnoremap <leader>rem :call ExtractMethod()<cr>
+nnoremap <leader>rit :call InlineTemp()<cr>
