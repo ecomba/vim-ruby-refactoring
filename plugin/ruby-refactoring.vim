@@ -59,7 +59,7 @@ function! ExtractConstant()
   " Find the enclosing class or module
   exec "?\\<class\\|module\\>"
   " Define the constant inside the class or module
-  exec "normal! o" . name . " = " . @a 
+  exec "normal! o" . toupper(name) . " = " . @a 
 endfunction
 
 " Synopsis
