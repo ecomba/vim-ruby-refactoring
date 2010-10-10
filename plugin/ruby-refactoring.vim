@@ -85,6 +85,12 @@ endfunction
 " Synopsis
 "   Rename the selected local variable 
 function! RenameLocalVariable()
+  " matchit.vim required 
+  if !exists("g:loaded_matchit") 
+    echoerr "matchit.vim (http://www.vim.org/scripts/script.php?script_id=39) required for RenameLocalVariable()"
+    return
+  endif
+
   try
     let name = s:get_input("Rename to: ", "No variable name given!" )
   catch
@@ -109,6 +115,7 @@ function! RenameLocalVariable()
   let block_start = line(".")
 
   " ... and end of the current block
+  " FIXME: Need an alternative to this to remove matchit.vim dep, search for 'end\n\n'? :-(
   normal %
   let block_end = line(".")
 
@@ -116,7 +123,7 @@ function! RenameLocalVariable()
   try
     exec ':' . block_start . ',' . block_end . 's/\<\zs' . @a . '\>\ze\([^\(]\|$\)/' . name . '/'
   catch
-    echo "Variable '" . @a . "' not found!"
+    echoerr "Variable '" . @a . "' not found!"
     return 
   finally
     " Restore @a
@@ -125,8 +132,6 @@ function! RenameLocalVariable()
     " Restore caret position
     call setpos(".",cursor_position) 
   endtry
-
-
 endfunction
 
 " Synopsis
