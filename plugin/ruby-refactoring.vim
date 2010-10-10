@@ -132,6 +132,7 @@ endfunction
 " I.e. Extract Method would be mapped to <leader>em
 
 nnoremap <leader>rap :call AddParameter()<cr>
+vnoremap <leader>rec :call ExtractConstant()<cr>
 vnoremap <leader>relv :call ExtractLocalVariable()<cr>
 vnoremap <leader>rem :call ExtractMethod()<cr>
 nnoremap <leader>rit :call InlineTemp()<cr>
