@@ -113,13 +113,20 @@ function! RenameLocalVariable()
   let block_end = line(".")
 
   " Rename the variable within the range of the block
-  exec ':' . block_start . ',' . block_end . 's/\<\zs' . @a . '\>\ze\([^\(]\|$\)/' . name . '/'
+  try
+    exec ':' . block_start . ',' . block_end . 's/\<\zs' . @a . '\>\ze\([^\(]\|$\)/' . name . '/'
+  catch
+    echo "Variable '" . @a . "' not found!"
+    return 
+  finally
+    " Restore @a
+    let @a = old_register_a
+    
+    " Restore caret position
+    call setpos(".",cursor_position) 
+  endtry
 
-  " Restore @a
-  let @a = old_register_a
 
-  " Restore caret position
-  call setpos(".",cursor_position) 
 endfunction
 
 " Synopsis
