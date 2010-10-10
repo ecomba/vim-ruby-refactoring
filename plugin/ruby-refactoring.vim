@@ -66,13 +66,9 @@ function! ExtractMethod()
 
   normal! gv
   normal "ay
-
-  let method_name = "def " . name 
-  call setline((line('$') +1), method_name)
-  call setline((line('$') + 1), "\<Tab>" . @a)
-  call setline((line('$') + 1), "end")
   exec "normal c$" . name
-  
+  exec "?\def"
+  exec "normal! O" . "def " . name . "\n\<Tab>" . @a . "\nend\n"
 endfunction
 
 function! InlineTemp()
