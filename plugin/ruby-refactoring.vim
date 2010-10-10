@@ -82,13 +82,11 @@ function! ExtractMethod() range
   exec "?\\<def\\>"
 
   " Mark current position for reindenting the source
-  " XXX: ideally shouldn't clobber this
-  normal mb 
-
   exec "normal! O" . "def " . name . "\nend\n"
+
   " Paste yanked range, select entire method & reindent, and jump back to
   " starting position
-  normal kPV`b=`a
+  normal kPkV}k=`a
 endfunction
 
 function! InlineTemp()
