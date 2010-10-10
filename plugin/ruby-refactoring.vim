@@ -8,13 +8,27 @@
 " Thanks to Gary Bernhardt for the inspiration for this tool and the original
 " ExtractVariable() and InlineTemp() functions.
 
-function! AddParameter()
-  let name = input("Parameter name: ")
-  let closing_bracket_index = stridx(getline("."), ")")
-
+" Support functions
+"
+function! s:get_input(message, error_message)
+  let name = input(a:message)
   if name == ''
-    return
+    throw a:error_message
   endif
+  return name
+endfunction
+
+" Patterns
+"
+function! AddParameter()
+  try
+    let name = s:get_input("Parameter name: ", "No parameter name given!")
+  catch
+    echo v:exception
+    return
+  endtry
+
+  let closing_bracket_index = stridx(getline("."), ")")
 
   if closing_bracket_index == -1
     execute "normal A(" . name . ")\<Esc>"
@@ -24,10 +38,12 @@ function! AddParameter()
 endfunction
 
 function! ExtractLocalVariable()
-  let name = input("Variable name: ")
-  if name == ''
+  try
+    let name = s:get_input("Variable name: ", "No variable name given!")
+  catch
+    echo v:exception
     return
-  endif
+  endtry
   " Enter visual mode (not sure why this is needed since we're already in
   " visual mode anyway)
   normal! gv
@@ -38,6 +54,25 @@ function! ExtractLocalVariable()
   exec "normal! O" . name . " = "
   " Paste the original selected text to be the variable value
   normal! $p
+endfunction
+
+function! ExtractMethod()
+  try
+    let name = s:get_input("Method name: ", "No method name given!")
+  catch
+    echo v:exception
+    return
+  endtry
+
+  normal! gv
+  normal "ay
+
+  let method_name = "def " . name 
+  call setline((line('$') +1), method_name)
+  call setline((line('$') + 1), "\<Tab>" . @a)
+  call setline((line('$') + 1), "end")
+  exec "normal c$" . name
+  
 endfunction
 
 function! InlineTemp()
@@ -72,4 +107,5 @@ endfunction
 
 nnoremap <leader>ap :call AddParameter()<cr>
 vnoremap <leader>elv :call ExtractLocalVariable()<cr>
+vnoremap <leader>em :call ExtractMethod()<cr>
 nnoremap <leader>it :call InlineTemp()<cr>
