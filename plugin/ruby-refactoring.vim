@@ -95,6 +95,70 @@ function! ExtractLocalVariable()
 endfunction
 
 " Synopsis
+"   Rename the selected instance variable
+function! RenameInstanceVariable()
+  " matchit.vim required 
+  if !exists("g:loaded_matchit") 
+    echoerr "matchit.vim (http://www.vim.org/scripts/script.php?script_id=39) required for RenameLocalVariable()"
+    return
+  endif
+
+  try
+    let name = s:get_input("Rename to: @", "No variable name given!" )
+  catch
+    echo v:exception
+    return
+  endtry
+
+  " Add leading @ if none provided
+  if( match( name, "^@" ) == -1 )
+    let name = "@" . name
+  endif
+  
+  " Backup @a 
+  let old_register_a = @a
+
+  normal! gv
+
+  " Yank the variable name into it
+  normal "ay
+
+  " If no @ at the start of selection, then abort
+  if match( @a, "^@" ) == -1
+    echoerr "Selection '" . @a . "' is not an instance variable"
+    let @a = old_register_a
+    return 
+  endif
+
+  " Mark current caret position
+  " FIXME: This doesn't capure column properly, because we're in visual mode
+  let cursor_position = getpos(".")
+
+  " Find the start ...
+  exec '?\<class\>'
+  let block_start = line(".")
+
+  " ... and end of the current block
+  " FIXME: Need an alternative to this to remove matchit.vim dep, search for 'end\n\n'? :-(
+  normal %
+  let block_end = line(".")
+
+  " Rename the variable within the range of the block
+  try
+    exec ':' . block_start . ',' . block_end . 's/' . @a . '\>\ze\([^\(]\|$\)/' . name . '/'
+  catch
+    echoerr "Instance variable '" . @a . "' not found!"
+    return 
+  finally
+    " Restore @a
+    let @a = old_register_a
+    
+    " Restore caret position
+    call setpos(".",cursor_position) 
+  endtry
+endfunction
+
+" Synopsis
 "   Rename the selected local variable 
 function! RenameLocalVariable()
   " matchit.vim required 
@@ -209,5 +273,6 @@ nnoremap <leader>rap :call AddParameter()<cr>
 vnoremap <leader>rec :call ExtractConstant()<cr>
 vnoremap <leader>relv :call ExtractLocalVariable()<cr>
 vnoremap <leader>rrlv :call RenameLocalVariable()<cr>
+vnoremap <leader>rriv :call RenameInstanceVariable()<cr>
 vnoremap <leader>rem :call ExtractMethod()<cr>
 nnoremap <leader>rit :call InlineTemp()<cr>
