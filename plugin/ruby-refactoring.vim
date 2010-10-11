@@ -10,6 +10,8 @@
 
 " Support functions
 "
+" Synopsis:
+"   Returns the input given by the user
 function! s:get_input(message, error_message)
   let name = input(a:message)
   if name == ''
@@ -18,9 +20,15 @@ function! s:get_input(message, error_message)
   return name
 endfunction
 
+" Synopsis:
+"   replaces a given string within a range inside the buffer
+function! s:replace_within_range(start, end, old, new)
+    return ':' . a:start . ',' . a:end . 's/\<\zs' . a:old . '\>\ze\([^\(]\|$\)/' . a:new . '/'
+endfunction
+
 " Patterns
 
-" Synopsis
+" Synopsis:
 "   Adds a parameter (or many separated with commas) to a method
 function! AddParameter()
   try
@@ -51,7 +59,7 @@ function! AddParameter()
   call setpos(".", cursor_position)
 endfunction
 
-" Synopsis
+" Synopsis:
 "   Extracts the selected scope into a constant at the top of the current
 "   module or class
 function! ExtractConstant()
@@ -73,7 +81,7 @@ function! ExtractConstant()
   normal! $p
 endfunction
 
-" Synopsis
+" Synopsis:
 "   Extracts the selected scope to a variable
 function! ExtractLocalVariable()
   try
@@ -94,7 +102,7 @@ function! ExtractLocalVariable()
   normal! $p
 endfunction
 
-" Synopsis
+" Synopsis:
 "   Rename the selected local variable 
 function! RenameLocalVariable()
   " matchit.vim required 
@@ -133,7 +141,7 @@ function! RenameLocalVariable()
 
   " Rename the variable within the range of the block
   try
-    exec ':' . block_start . ',' . block_end . 's/\<\zs' . @a . '\>\ze\([^\(]\|$\)/' . name . '/'
+    exec s:replace_within_range(block_start, block_end, @a, name)
   catch
     echoerr "Variable '" . @a . "' not found!"
     return 
@@ -146,7 +154,7 @@ function! RenameLocalVariable()
   endtry
 endfunction
 
-" Synopsis
+" Synopsis:
 "   Extracts the selected scope into a method above the scope of the
 "   current method
 function! ExtractMethod() range
@@ -175,6 +183,8 @@ function! ExtractMethod() range
   normal kPkV}k=`a
 endfunction
 
+" Synopsis:
+"   Inlines a variable
 function! InlineTemp()
   " Copy the variable under the cursor into the 'a' register
   " XXX: How do I copy into a variable so I don't pollute the registers?
