@@ -53,7 +53,7 @@ function! s:get_range_for_block(pattern_start, flags)
   let block_start = search(a:pattern_start, a:flags)
   normal %
   let block_end = line(".")
-  
+
   " Restore the cursor
   call setpos(".",cursor_position) 
 
@@ -140,6 +140,13 @@ endfunction
 "   Rename the selected instance variable
 function! RenameInstanceVariable()
   try
+    let selection = s:get_visual_selection()
+
+    " If no @ at the start of selection, then abort
+    if match( selection, "^@" ) == -1
+      throw "Selection '" . selection . "' is not an instance variable"
+    endif
+
     let name = s:get_input("Rename to: @", "No variable name given!" )
   catch
     echo v:exception
@@ -157,14 +164,6 @@ function! RenameInstanceVariable()
     let name_no_prefix = matchstr(name,'^@\zs.*')
   endif
 
-  let selection = s:get_visual_selection()
-  
-  " If no @ at the start of selection, then abort
-  if match( selection, "^@" ) == -1
-    echoerr "Selection '" . selection . "' is not an instance variable"
-    return 
-  endif
-
   " Find the start and end of the current block
   " TODO: tidy up if no matching 'def' found (start would be 0 atm)
   let [block_start, block_end] = s:get_range_for_block('\<class\>','Wb')
@@ -173,30 +172,36 @@ function! RenameInstanceVariable()
   call s:gsub_all_in_range(block_start, block_end, selection.'\>\ze\([^\(]\|$\)', name)
 
   " copy with no prefix for the attr_* match
-  let selection_with_no_prefix = matchstr( selection, '^@\zs.*' )
+  let selection_no_prefix = matchstr( selection, '^@\zs.*' )
 
   " Rename attr_* symbols
-  call s:gsub_all_in_range(block_start, block_end, '^\s*attr_\(reader\|writer\|accessor\).*\:\zs'.selection_with_no_prefix, name_no_prefix)
+  call s:gsub_all_in_range(block_start, block_end, '^\s*attr_\(reader\|writer\|accessor\).*\:\zs'.selection_no_prefix, name_no_prefix)
 endfunction
 
 " Synopsis
 "   Rename the selected local variable 
 function! RenameLocalVariable()
   try
-    let name = s:get_input("Rename to: ", "No variable name given!" )
+    let selection = s:get_visual_selection()
+
+    " If @ at the start of selection, then abort
+    if match( selection, "@" ) != -1
+      throw "Selection '" . selection . "' is not a local variable"
+    endif
+
+    "let name = s:get_input("Rename to: ", "No variable name given!" )
+    let name = "beep"
   catch
     echo v:exception
     return
   endtry
-
-  let selection = s:get_visual_selection()
 
   " Find the start and end of the current block
   " TODO: tidy up if no matching 'def' found (start would be 0 atm)
   let [block_start, block_end] = s:get_range_for_block('\<def\>','Wb')
 
   " Rename the variable within the range of the block
-  call s:gsub_all_in_range(block_start, block_end, '\<\zs'.selection.'\>\ze\([^\(]\|$\)', name)
+  call s:gsub_all_in_range(block_start, block_end, '[^@]\<\zs'.selection.'\>\ze\([^\(]\|$\)', name)
 endfunction
 
 " Synopsis
