@@ -29,6 +29,7 @@ function! s:get_visual_selection()
   endtry
 endfunction
 
+" loop over the line range given, global replace pattern with replace
 function! s:gsub_all_in_range(start_line, end_line, pattern, replace)
   let lnum = a:start_line
   while lnum <= a:end_line
@@ -39,16 +40,17 @@ function! s:gsub_all_in_range(start_line, end_line, pattern, replace)
   endwhile
 endfunction!
 
+" find pattern to matching end, flags as per :h search()
 function! s:get_range_for_block(pattern_start, flags)
   " matchit.vim required 
-  if exists("g:loaded_matchit") 
+  if !exists("g:loaded_matchit") 
     throw("matchit.vim (http://www.vim.org/scripts/script.php?script_id=39) required for RenameLocalVariable()")
   endif
 
   let cursor_position = getpos(".")
 
   " TODO: Need alternative to remove matchit.vim dep - matchpair() ?
-  let block_start = search('\<def\>', a:flags)
+  let block_start = search(a:pattern_start, a:flags)
   normal %
   let block_end = line(".")
   
@@ -137,12 +139,6 @@ endfunction
 " Synopsis
 "   Rename the selected instance variable
 function! RenameInstanceVariable()
-  " matchit.vim required 
-  if !exists("g:loaded_matchit") 
-    echoerr "matchit.vim (http://www.vim.org/scripts/script.php?script_id=39) required for RenameLocalVariable()"
-    return
-  endif
-
   try
     let name = s:get_input("Rename to: @", "No variable name given!" )
   catch
@@ -150,51 +146,37 @@ function! RenameInstanceVariable()
     return
   endtry
 
+  " Assume no prefix given
+  let name_no_prefix = name
+
   " Add leading @ if none provided
   if( match( name, "^@" ) == -1 )
     let name = "@" . name
+  else
+    " Remove the @ from the no_prefix version
+    let name_no_prefix = matchstr(name,'^@\zs.*')
   endif
 
   let selection = s:get_visual_selection()
-
+  
   " If no @ at the start of selection, then abort
   if match( selection, "^@" ) == -1
     echoerr "Selection '" . selection . "' is not an instance variable"
     return 
   endif
 
-  " Mark current caret position
-  " FIXME: This doesn't capure column properly, because we're in visual mode
-  let cursor_position = getpos(".")
-
-  " Find the start ...
-  exec '?\<class\>'
-  let block_start = line(".")
-
-  " ... and end of the current block
-  " FIXME: Need an alternative to this to remove matchit.vim dep, search for 'end\n\n'? :-(
-  normal %
-  let block_end = line(".")
+  " Find the start and end of the current block
+  " TODO: tidy up if no matching 'def' found (start would be 0 atm)
+  let [block_start, block_end] = s:get_range_for_block('\<class\>','Wb')
 
   " Rename the variable within the range of the block
-  try
-    exec ':' . block_start . ',' . block_end . 's/' . selection . '\>\ze\([^\(]\|$\)/' . name . '/'
-    try
-      " copy with no prefix for the attr_* match
-      let selection_with_no_prefix = matchstr( selection, '^@\zs.*' )
+  call s:gsub_all_in_range(block_start, block_end, selection.'\>\ze\([^\(]\|$\)', name)
 
-      " this might not match
-      exec ':' . block_start . ',' . block_end . 's/^\s*attr_\(reader\|writer\|accessor\).*\:\zs' . selection_with_no_prefix . '/' . name . '/'
-    catch
-      " but it's okay. chill, baby
-    endtry
-  catch
-    echoerr "Instance variable '" . selection . "' not found!"
-    return 
-  finally
-    " Restore caret position
-    call setpos(".",cursor_position) 
-  endtry
+  " copy with no prefix for the attr_* match
+  let selection_with_no_prefix = matchstr( selection, '^@\zs.*' )
+
+  " Rename attr_* symbols
+  call s:gsub_all_in_range(block_start, block_end, '^\s*attr_\(reader\|writer\|accessor\).*\:\zs'.selection_with_no_prefix, name_no_prefix)
 endfunction
 
 " Synopsis
