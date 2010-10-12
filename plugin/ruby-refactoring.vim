@@ -21,6 +21,9 @@ function! s:get_input(message, error_message)
   return name
 endfunction
 
+" Synopsis:
+"   Returns the text that was selected when the function was invoked
+"   without clobbering any registers
 function! s:get_visual_selection() 
   try
     let a_save = @a
@@ -31,7 +34,8 @@ function! s:get_visual_selection()
   endtry
 endfunction
 
-" loop over the line range given, global replace pattern with replace
+" Synopsis:
+"   Loop over the line range given, global replace pattern with replace
 function! s:gsub_all_in_range(start_line, end_line, pattern, replace)
   let lnum = a:start_line
   while lnum <= a:end_line
@@ -42,7 +46,8 @@ function! s:gsub_all_in_range(start_line, end_line, pattern, replace)
   endwhile
 endfunction!
 
-" find pattern to matching end, flags as per :h search()
+" Synopsis:
+"   Find pattern to matching end, flags as per :h search()
 function! s:get_range_for_block(pattern_start, flags)
   " matchit.vim required 
   if !exists("g:loaded_matchit") 
@@ -60,7 +65,6 @@ function! s:get_range_for_block(pattern_start, flags)
   call setpos(".",cursor_position) 
 
   return [block_start, block_end]
->>>>>>> aba81eb3bc694c4b758c364560eca24c601b5303
 endfunction
 
 " Patterns
@@ -139,7 +143,7 @@ function! ExtractLocalVariable()
   normal! $p
 endfunction
 
-" Synopsis
+" Synopsis:
 "   Rename the selected instance variable
 function! RenameInstanceVariable()
   try
@@ -181,7 +185,7 @@ function! RenameInstanceVariable()
   call s:gsub_all_in_range(block_start, block_end, '^\s*attr_\(reader\|writer\|accessor\).*\:\zs'.selection_no_prefix, name_no_prefix)
 endfunction
 
-" Synopsis
+" Synopsis:
 "   Rename the selected local variable 
 function! RenameLocalVariable()
   try
