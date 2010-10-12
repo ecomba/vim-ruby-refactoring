@@ -139,21 +139,9 @@ function! ExtractLocalVariable()
   normal! $p
 endfunction
 
-<<<<<<< HEAD
-" Synopsis:
-"   Rename the selected local variable 
-function! RenameLocalVariable()
-  " matchit.vim required 
-  if !exists("g:loaded_matchit") 
-    echoerr "matchit.vim (http://www.vim.org/scripts/script.php?script_id=39) required for RenameLocalVariable()"
-    return
-  endif
-
-=======
 " Synopsis
 "   Rename the selected instance variable
 function! RenameInstanceVariable()
->>>>>>> aba81eb3bc694c4b758c364560eca24c601b5303
   try
     let selection = s:get_visual_selection()
 
@@ -197,9 +185,6 @@ endfunction
 "   Rename the selected local variable 
 function! RenameLocalVariable()
   try
-<<<<<<< HEAD
-    exec s:replace_within_range(block_start, block_end, @a, name)
-=======
     let selection = s:get_visual_selection()
 
     " If @ at the start of selection, then abort
@@ -208,7 +193,6 @@ function! RenameLocalVariable()
     endif
 
     let name = s:get_input("Rename to: ", "No variable name given!" )
->>>>>>> aba81eb3bc694c4b758c364560eca24c601b5303
   catch
     echo v:exception
     return
