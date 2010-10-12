@@ -272,9 +272,8 @@ endfunction
 
 " Mappings:
 "
-" I have tried to use the mappings in a way that they describe the refactoring
-" pattern to be used.
-" I.e. Extract Method would be mapped to <leader>em
+" Default mappings are <leader>r followed by an acronym of the pattern's name
+" I.e. Extract Method is mapped to <leader>rem
 
 nnoremap <leader>rap :call AddParameter()<cr>
 vnoremap <leader>rec :call ExtractConstant()<cr>
