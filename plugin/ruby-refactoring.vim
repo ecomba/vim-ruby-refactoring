@@ -114,7 +114,7 @@ function! RenameInstanceVariable()
   if( match( name, "^@" ) == -1 )
     let name = "@" . name
   endif
-  
+
   " Backup @a 
   let old_register_a = @a
 
@@ -123,10 +123,13 @@ function! RenameInstanceVariable()
   " Yank the variable name into it
   normal "ay
 
+  " Restore @a
+  let selection = @a
+  let @a = old_register_a
+
   " If no @ at the start of selection, then abort
-  if match( @a, "^@" ) == -1
-    echoerr "Selection '" . @a . "' is not an instance variable"
-    let @a = old_register_a
+  if match( selection, "^@" ) == -1
+    echoerr "Selection '" . selection . "' is not an instance variable"
     return 
   endif
 
@@ -145,14 +148,20 @@ function! RenameInstanceVariable()
 
   " Rename the variable within the range of the block
   try
-    exec ':' . block_start . ',' . block_end . 's/' . @a . '\>\ze\([^\(]\|$\)/' . name . '/'
+    exec ':' . block_start . ',' . block_end . 's/' . selection . '\>\ze\([^\(]\|$\)/' . name . '/'
+    try
+      " copy with no prefix for the attr_* match
+      let selection_with_no_prefix = matchstr( selection, '^@\zs.*' )
+  
+      " this might not match
+      exec ':' . block_start . ',' . block_end . 's/^\s*attr_\(reader\|writer\|accessor\).*\:\zs' . selection_with_no_prefix . '/' . name . '/'
+    catch
+      " but it's okay. chill, baby
+    endtry
   catch
-    echoerr "Instance variable '" . @a . "' not found!"
+    echoerr "Instance variable '" . selection . "' not found!"
     return 
   finally
-    " Restore @a
-    let @a = old_register_a
-    
     " Restore caret position
     call setpos(".",cursor_position) 
   endtry
