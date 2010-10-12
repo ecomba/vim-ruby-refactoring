@@ -189,8 +189,7 @@ function! RenameLocalVariable()
       throw "Selection '" . selection . "' is not a local variable"
     endif
 
-    "let name = s:get_input("Rename to: ", "No variable name given!" )
-    let name = "beep"
+    let name = s:get_input("Rename to: ", "No variable name given!" )
   catch
     echo v:exception
     return
