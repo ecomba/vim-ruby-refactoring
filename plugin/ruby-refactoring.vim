@@ -190,25 +190,25 @@ function! RenameLocalVariable()
   " Backup current caret position
   let cursor_position = getpos(".")
 
-  " Find the start...
-  call search( '\<def\>', "Wb" )
-  let block_start = line(".")
-  
-  " ... and end of the current block
-  " FIXME: Need an alternative to this to remove matchit.vim dep
+  " Find the start and end of the current block
+  " TODO: tidy up if no matching 'def' found 
+  " TODO: Need an alternative to this to remove matchit.vim dep - matchpair()
+  " might help here
+  let block_start = search('\<def\>', "Wb")
   normal %
   let block_end = line(".")
+  
+  " Restore the cursor
+  call setpos(".",cursor_position) 
 
   " Rename the variable within the range of the block
-  try
-    exec ':' . block_start . ',' . block_end . 's/\<\zs' . selection . '\>\ze\([^\(]\|$\)/' . name . '/'
-  catch
-    echoerr "Variable '" . selection . "' not found!"
-    return 
-  finally
-    " Restore caret position
-    call setpos(".",cursor_position) 
-  endtry
+  let lnum = block_start
+  while lnum <= block_end
+    let oldline = getline(lnum)
+    let newline = substitute(oldline,'\<\zs'.selection.'\>\ze\([^\(]\|$\)', name, 'g')
+    call setline(lnum, newline)
+    let lnum = lnum + 1
+  endwhile
 endfunction
 
 " Synopsis
