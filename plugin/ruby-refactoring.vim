@@ -7,6 +7,7 @@
 " Acknowledgements:
 " Thanks to Gary Bernhardt for the inspiration for this tool and the original
 " ExtractVariable() and InlineTemp() functions.
+" Some support functions borrowed from Luc Hermitte's lh-vim library
 
 " Support functions
 "
@@ -16,6 +17,16 @@ function! s:get_input(message, error_message)
     throw a:error_message
   endif
   return name
+endfunction
+
+function! s:get_visual_selection() 
+  try
+    let a_save = @a
+    normal! gv"ay
+    return @a
+  finally
+    let @a = a_save
+  endtry
 endfunction
 
 " Patterns
@@ -115,17 +126,7 @@ function! RenameInstanceVariable()
     let name = "@" . name
   endif
 
-  " Backup @a 
-  let old_register_a = @a
-
-  normal! gv
-
-  " Yank the variable name into it
-  normal "ay
-
-  " Restore @a
-  let selection = @a
-  let @a = old_register_a
+  let selection = s:get_visual_selection()
 
   " If no @ at the start of selection, then abort
   if match( selection, "^@" ) == -1
@@ -152,7 +153,7 @@ function! RenameInstanceVariable()
     try
       " copy with no prefix for the attr_* match
       let selection_with_no_prefix = matchstr( selection, '^@\zs.*' )
-  
+
       " this might not match
       exec ':' . block_start . ',' . block_end . 's/^\s*attr_\(reader\|writer\|accessor\).*\:\zs' . selection_with_no_prefix . '/' . name . '/'
     catch
@@ -177,43 +178,34 @@ function! RenameLocalVariable()
   endif
 
   try
-    let name = s:get_input("Rename to: ", "No variable name given!" )
+    "let name = s:get_input("Rename to: ", "No variable name given!" )
+    let name = "beep"
   catch
     echo v:exception
     return
   endtry
 
-  " Backup @a 
-  let old_register_a = @a
+  let selection = s:get_visual_selection()
 
-  normal! gv
-
-  " Yank the variable name into it
-  normal "ay
-
-  " Mark current caret position
-  " FIXME: This doesn't capure column properly, because we're in visual mode
+  " Backup current caret position
   let cursor_position = getpos(".")
 
-  " Find the start ...
-  exec '?\<def\>'
+  " Find the start...
+  call search( '\<def\>', "Wb" )
   let block_start = line(".")
-
+  
   " ... and end of the current block
-  " FIXME: Need an alternative to this to remove matchit.vim dep, search for 'end\n\n'? :-(
+  " FIXME: Need an alternative to this to remove matchit.vim dep
   normal %
   let block_end = line(".")
 
   " Rename the variable within the range of the block
   try
-    exec ':' . block_start . ',' . block_end . 's/\<\zs' . @a . '\>\ze\([^\(]\|$\)/' . name . '/'
+    exec ':' . block_start . ',' . block_end . 's/\<\zs' . selection . '\>\ze\([^\(]\|$\)/' . name . '/'
   catch
-    echoerr "Variable '" . @a . "' not found!"
+    echoerr "Variable '" . selection . "' not found!"
     return 
   finally
-    " Restore @a
-    let @a = old_register_a
-    
     " Restore caret position
     call setpos(".",cursor_position) 
   endtry
@@ -282,6 +274,8 @@ nnoremap <leader>rap :call AddParameter()<cr>
 vnoremap <leader>rec :call ExtractConstant()<cr>
 vnoremap <leader>relv :call ExtractLocalVariable()<cr>
 vnoremap <leader>rrlv :call RenameLocalVariable()<cr>
+nnoremap <leader>rrlv :call RenameLocalVariable()<cr>
 vnoremap <leader>rriv :call RenameInstanceVariable()<cr>
 vnoremap <leader>rem :call ExtractMethod()<cr>
 nnoremap <leader>rit :call InlineTemp()<cr>
+
