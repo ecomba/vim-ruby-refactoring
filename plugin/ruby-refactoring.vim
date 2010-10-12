@@ -7,6 +7,7 @@
 " Acknowledgements:
 " Thanks to Gary Bernhardt for the inspiration for this tool and the original
 " ExtractVariable() and InlineTemp() functions.
+" Some support functions borrowed from Luc Hermitte's lh-vim library
 
 " Support functions
 "
@@ -20,10 +21,46 @@ function! s:get_input(message, error_message)
   return name
 endfunction
 
-" Synopsis:
-"   replaces a given string within a range inside the buffer
-function! s:replace_within_range(start, end, old, new)
-    return ':' . a:start . ',' . a:end . 's/\<\zs' . a:old . '\>\ze\([^\(]\|$\)/' . a:new . '/'
+function! s:get_visual_selection() 
+  try
+    let a_save = @a
+    normal! gv"ay
+    return @a
+  finally
+    let @a = a_save
+  endtry
+endfunction
+
+" loop over the line range given, global replace pattern with replace
+function! s:gsub_all_in_range(start_line, end_line, pattern, replace)
+  let lnum = a:start_line
+  while lnum <= a:end_line
+    let oldline = getline(lnum)
+    let newline = substitute(oldline,a:pattern,a:replace,'g')
+    call setline(lnum, newline)
+    let lnum = lnum + 1
+  endwhile
+endfunction!
+
+" find pattern to matching end, flags as per :h search()
+function! s:get_range_for_block(pattern_start, flags)
+  " matchit.vim required 
+  if !exists("g:loaded_matchit") 
+    throw("matchit.vim (http://www.vim.org/scripts/script.php?script_id=39) required for RenameLocalVariable()")
+  endif
+
+  let cursor_position = getpos(".")
+
+  " TODO: Need alternative to remove matchit.vim dep - matchpair() ?
+  let block_start = search(a:pattern_start, a:flags)
+  normal %
+  let block_end = line(".")
+
+  " Restore the cursor
+  call setpos(".",cursor_position) 
+
+  return [block_start, block_end]
+>>>>>>> aba81eb3bc694c4b758c364560eca24c601b5303
 endfunction
 
 " Patterns
@@ -102,6 +139,7 @@ function! ExtractLocalVariable()
   normal! $p
 endfunction
 
+<<<<<<< HEAD
 " Synopsis:
 "   Rename the selected local variable 
 function! RenameLocalVariable()
@@ -111,47 +149,77 @@ function! RenameLocalVariable()
     return
   endif
 
+=======
+" Synopsis
+"   Rename the selected instance variable
+function! RenameInstanceVariable()
+>>>>>>> aba81eb3bc694c4b758c364560eca24c601b5303
   try
-    let name = s:get_input("Rename to: ", "No variable name given!" )
+    let selection = s:get_visual_selection()
+
+    " If no @ at the start of selection, then abort
+    if match( selection, "^@" ) == -1
+      throw "Selection '" . selection . "' is not an instance variable"
+    endif
+
+    let name = s:get_input("Rename to: @", "No variable name given!" )
   catch
     echo v:exception
     return
   endtry
 
-  " Backup @a 
-  let old_register_a = @a
+  " Assume no prefix given
+  let name_no_prefix = name
 
-  normal! gv
+  " Add leading @ if none provided
+  if( match( name, "^@" ) == -1 )
+    let name = "@" . name
+  else
+    " Remove the @ from the no_prefix version
+    let name_no_prefix = matchstr(name,'^@\zs.*')
+  endif
 
-  " Yank the variable name into it
-  normal "ay
-
-  " Mark current caret position
-  " FIXME: This doesn't capure column properly, because we're in visual mode
-  let cursor_position = getpos(".")
-
-  " Find the start ...
-  exec '?\<def\>'
-  let block_start = line(".")
-
-  " ... and end of the current block
-  " FIXME: Need an alternative to this to remove matchit.vim dep, search for 'end\n\n'? :-(
-  normal %
-  let block_end = line(".")
+  " Find the start and end of the current block
+  " TODO: tidy up if no matching 'def' found (start would be 0 atm)
+  let [block_start, block_end] = s:get_range_for_block('\<class\>','Wb')
 
   " Rename the variable within the range of the block
+  call s:gsub_all_in_range(block_start, block_end, selection.'\>\ze\([^\(]\|$\)', name)
+
+  " copy with no prefix for the attr_* match
+  let selection_no_prefix = matchstr( selection, '^@\zs.*' )
+
+  " Rename attr_* symbols
+  call s:gsub_all_in_range(block_start, block_end, '^\s*attr_\(reader\|writer\|accessor\).*\:\zs'.selection_no_prefix, name_no_prefix)
+endfunction
+
+" Synopsis
+"   Rename the selected local variable 
+function! RenameLocalVariable()
   try
+<<<<<<< HEAD
     exec s:replace_within_range(block_start, block_end, @a, name)
+=======
+    let selection = s:get_visual_selection()
+
+    " If @ at the start of selection, then abort
+    if match( selection, "@" ) != -1
+      throw "Selection '" . selection . "' is not a local variable"
+    endif
+
+    let name = s:get_input("Rename to: ", "No variable name given!" )
+>>>>>>> aba81eb3bc694c4b758c364560eca24c601b5303
   catch
-    echoerr "Variable '" . @a . "' not found!"
-    return 
-  finally
-    " Restore @a
-    let @a = old_register_a
-    
-    " Restore caret position
-    call setpos(".",cursor_position) 
+    echo v:exception
+    return
   endtry
+
+  " Find the start and end of the current block
+  " TODO: tidy up if no matching 'def' found (start would be 0 atm)
+  let [block_start, block_end] = s:get_range_for_block('\<def\>','Wb')
+
+  " Rename the variable within the range of the block
+  call s:gsub_all_in_range(block_start, block_end, '[^@]\<\zs'.selection.'\>\ze\([^\(]\|$\)', name)
 endfunction
 
 " Synopsis:
@@ -173,7 +241,7 @@ function! ExtractMethod() range
   " XXX: ideally shouldn't clobber this
   normal ma
 
-  exec "?\\<def\\>"
+  exec '?\<def\>'
 
   " Mark current position for reindenting the source
   exec "normal! O" . "def " . name . "\nend\n"
@@ -219,5 +287,7 @@ nnoremap <leader>rap :call AddParameter()<cr>
 vnoremap <leader>rec :call ExtractConstant()<cr>
 vnoremap <leader>relv :call ExtractLocalVariable()<cr>
 vnoremap <leader>rrlv :call RenameLocalVariable()<cr>
+vnoremap <leader>rriv :call RenameInstanceVariable()<cr>
 vnoremap <leader>rem :call ExtractMethod()<cr>
 nnoremap <leader>rit :call InlineTemp()<cr>
+

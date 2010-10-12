@@ -25,6 +25,7 @@ Implemented patterns:
 - Extract Constant:  <leader>rec (visual mode selection)
 - Extract Local Variable: <leader>relv (works if the variable is selected in visual mode)
 - Rename Local Variable: <leader>rrlv (works if the variable is selected in visual mode, *REQUIRES matchit.vim*)
+- Rename Instance Variable: <leader>rriv (works if the variable is selected in visual mode, *REQUIRES matchit.vim*)
 - Extract Method: <leader>rem (visual mode selection)
 - Inline Temp: <leader>rit
 
