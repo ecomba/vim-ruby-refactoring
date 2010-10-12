@@ -7,7 +7,12 @@
 " Acknowledgements:
 " Thanks to Gary Bernhardt for the inspiration for this tool and the original
 " ExtractVariable() and InlineTemp() functions.
+"
 " Some support functions borrowed from Luc Hermitte's lh-vim library
+"
+" Many, many thanks to Paul King for the great effort in writing a lot ot the
+" patterns found in this library and the endless nights he stays awake to make
+" this happen.
 
 " Support functions
 "
