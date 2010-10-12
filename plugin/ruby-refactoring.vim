@@ -29,6 +29,35 @@ function! s:get_visual_selection()
   endtry
 endfunction
 
+function! s:gsub_all_in_range(start_line, end_line, pattern, replace)
+  let lnum = a:start_line
+  while lnum <= a:end_line
+    let oldline = getline(lnum)
+    let newline = substitute(oldline,a:pattern,a:replace,'g')
+    call setline(lnum, newline)
+    let lnum = lnum + 1
+  endwhile
+endfunction!
+
+function! s:get_range_for_block(pattern_start, flags)
+  " matchit.vim required 
+  if exists("g:loaded_matchit") 
+    throw("matchit.vim (http://www.vim.org/scripts/script.php?script_id=39) required for RenameLocalVariable()")
+  endif
+
+  let cursor_position = getpos(".")
+
+  " TODO: Need alternative to remove matchit.vim dep - matchpair() ?
+  let block_start = search('\<def\>', a:flags)
+  normal %
+  let block_end = line(".")
+  
+  " Restore the cursor
+  call setpos(".",cursor_position) 
+
+  return [block_start, block_end]
+endfunction
+
 " Patterns
 
 " Synopsis
@@ -171,15 +200,8 @@ endfunction
 " Synopsis
 "   Rename the selected local variable 
 function! RenameLocalVariable()
-  " matchit.vim required 
-  if !exists("g:loaded_matchit") 
-    echoerr "matchit.vim (http://www.vim.org/scripts/script.php?script_id=39) required for RenameLocalVariable()"
-    return
-  endif
-
   try
-    "let name = s:get_input("Rename to: ", "No variable name given!" )
-    let name = "beep"
+    let name = s:get_input("Rename to: ", "No variable name given!" )
   catch
     echo v:exception
     return
@@ -187,28 +209,12 @@ function! RenameLocalVariable()
 
   let selection = s:get_visual_selection()
 
-  " Backup current caret position
-  let cursor_position = getpos(".")
-
   " Find the start and end of the current block
-  " TODO: tidy up if no matching 'def' found 
-  " TODO: Need an alternative to this to remove matchit.vim dep - matchpair()
-  " might help here
-  let block_start = search('\<def\>', "Wb")
-  normal %
-  let block_end = line(".")
-  
-  " Restore the cursor
-  call setpos(".",cursor_position) 
+  " TODO: tidy up if no matching 'def' found (start would be 0 atm)
+  let [block_start, block_end] = s:get_range_for_block('\<def\>','Wb')
 
   " Rename the variable within the range of the block
-  let lnum = block_start
-  while lnum <= block_end
-    let oldline = getline(lnum)
-    let newline = substitute(oldline,'\<\zs'.selection.'\>\ze\([^\(]\|$\)', name, 'g')
-    call setline(lnum, newline)
-    let lnum = lnum + 1
-  endwhile
+  call s:gsub_all_in_range(block_start, block_end, '\<\zs'.selection.'\>\ze\([^\(]\|$\)', name)
 endfunction
 
 " Synopsis
@@ -274,7 +280,6 @@ nnoremap <leader>rap :call AddParameter()<cr>
 vnoremap <leader>rec :call ExtractConstant()<cr>
 vnoremap <leader>relv :call ExtractLocalVariable()<cr>
 vnoremap <leader>rrlv :call RenameLocalVariable()<cr>
-nnoremap <leader>rrlv :call RenameLocalVariable()<cr>
 vnoremap <leader>rriv :call RenameInstanceVariable()<cr>
 vnoremap <leader>rem :call ExtractMethod()<cr>
 nnoremap <leader>rit :call InlineTemp()<cr>
