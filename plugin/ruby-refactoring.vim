@@ -218,7 +218,7 @@ function! ExtractMethod() range
   " XXX: ideally shouldn't clobber this
   normal ma
 
-  exec "?\\<def\\>"
+  exec '?\<def\>'
 
   " Mark current position for reindenting the source
   exec "normal! O" . "def " . name . "\nend\n"
