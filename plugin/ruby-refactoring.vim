@@ -156,7 +156,12 @@ function! RenameInstanceVariable()
 
     " If no @ at the start of selection, then abort
     if match( selection, "^@" ) == -1
-      throw "Selection '" . selection . "' is not an instance variable"
+      let left_of_selection = getline(".")[col(".")-2]
+      if left_of_selection == "@"
+        let selection = "@".selection
+      else
+        throw "Selection '" . selection . "' is not an instance variable"
+      end
     endif
 
     let name = s:get_input("Rename to: @", "No variable name given!" )
@@ -188,6 +193,21 @@ function! RenameInstanceVariable()
 
   " Rename attr_* symbols
   call s:gsub_all_in_range(block_start, block_end, '^\s*attr_\(reader\|writer\|accessor\).*\:\zs'.selection_no_prefix, name_no_prefix)
+endfunction
+
+" Synopsis:
+"   Intending to pass all rename variable methods through here, allowing
+"   various conveniences. Allows normal mode rename of *local* variable under
+"   the cursor only, for now. 
+function! RenameVariableProxy() 
+  let selection = s:get_visual_selection()
+  
+  let left_of_selection = getline(".")[col(".")-2]
+  if left_of_selection == "@"
+    throw "Use RenameInstanceVariable() to rename instance variables"
+  endif
+
+  call RenameLocalVariable()
 endfunction
 
 " Synopsis:
@@ -280,6 +300,7 @@ nnoremap <leader>rap :call AddParameter()<cr>
 vnoremap <leader>rec :call ExtractConstant()<cr>
 vnoremap <leader>relv :call ExtractLocalVariable()<cr>
 vnoremap <leader>rrlv :call RenameLocalVariable()<cr>
+nnoremap <leader>rrlv viw:call RenameVariableProxy()<cr>
 vnoremap <leader>rriv :call RenameInstanceVariable()<cr>
 vnoremap <leader>rem :call ExtractMethod()<cr>
 nnoremap <leader>rit :call InlineTemp()<cr>
