@@ -19,14 +19,24 @@ a couple of weeks later.
 So now I have decided to code this in vim script, but I am not sure how far
 I will go with it (clone at your own risk).
 
-Implemented patterns:
+Implemented commands/patterns:
 
-- Add Parameter: <leader>rap
-- Extract Constant:  <leader>rec (visual mode selection)
-- Extract Local Variable: <leader>relv (works if the variable is selected in visual mode)
-- Rename Local Variable: <leader>rrlv (works with selected variable, or variable under the cursor, *REQUIRES matchit.vim*)
-- Rename Instance Variable: <leader>rriv (works if the variable is selected in visual mode, *REQUIRES matchit.vim*)
-- Extract Method: <leader>rem (visual mode selection)
-- Inline Temp: <leader>rit
+:RAddParameter           - Add Parameter 
+:RInlineTemp             - Inline Temp
+:RExtractConstant        - Extract Constant          (visual selection)
+:RExtractLocalVariable   - Extract Local Variable    (visual selection)
+:RRenameLocalVariable    - Rename Local Variable     (visual selection/variable under the cursor, *REQUIRES matchit.vim*)
+:RRenameInstanceVariable - Rename Instance Variable  (visual selection, *REQUIRES matchit.vim*)
+:RExtractMethod          - Extract Method            (visual selection)
+
+Default bindings:
+
+:nnoremap <leader>rap  :RAddParameter<cr>
+:nnoremap <leader>rit  :RInlineTemp<cr>
+:vnoremap <leader>rec  :RExtractConstant<cr>
+:vnoremap <leader>relv :RExtractLocalVariable<cr>
+:vnoremap <leader>rrlv :RRenameLocalVariable<cr>
+:vnoremap <leader>rriv :RRenameInstanceVariable<cr>
+:vnoremap <leader>rem  :RExtractMethod<cr>
 
 Enrique Comba Riepenhausen

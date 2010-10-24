@@ -290,17 +290,34 @@ function! InlineTemp()
   exec ':.s/\<' . @a . '\>/' . @b
 endfunction
 
+" Commands:
+"
+" Using a simple 'R' prefix for now
+" TODO: Do we even need this prefix? How likely is it that we'll conflict?
+
+command! RAddParameter                  call AddParameter()
+command! RInlineTemp                    call InlineTemp()
+
+command! -range RExtractConstant        call ExtractConstant()
+command! -range RExtractLocalVariable   call ExtractLocalVariable()
+command! -range RRenameLocalVariable    call RenameLocalVariable()
+command! -range RRenameInstanceVariable call RenameInstanceVariable()
+command! -range RExtractMethod          call ExtractMethod()
+
 " Mappings:
 "
 " Default mappings are <leader>r followed by an acronym of the pattern's name
 " I.e. Extract Method is mapped to <leader>rem
 
-nnoremap <leader>rap :call AddParameter()<cr>
-vnoremap <leader>rec :call ExtractConstant()<cr>
-vnoremap <leader>relv :call ExtractLocalVariable()<cr>
-vnoremap <leader>rrlv :call RenameLocalVariable()<cr>
+nnoremap <leader>rap  :RAddParameter<cr>
+nnoremap <leader>rit  :RInlineTemp<cr>
+
+vnoremap <leader>rec  :RExtractConstant<cr>
+vnoremap <leader>relv :RExtractLocalVariable<cr>
+vnoremap <leader>rrlv :RRenameLocalVariable<cr>
+vnoremap <leader>rriv :RRenameInstanceVariable<cr>
+vnoremap <leader>rem  :RExtractMethod<cr>
+
+" TODO: PPK - Revisit this, not convinced the proxy fn is such a good idea in retrospect 
 nnoremap <leader>rrlv viw:call RenameVariableProxy()<cr>
-vnoremap <leader>rriv :call RenameInstanceVariable()<cr>
-vnoremap <leader>rem :call ExtractMethod()<cr>
-nnoremap <leader>rit :call InlineTemp()<cr>
 
