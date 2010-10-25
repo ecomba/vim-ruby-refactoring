@@ -64,17 +64,28 @@ function! s:gsub_all_in_range(start_line, end_line, pattern, replace)
 endfunction!
 
 " Synopsis:
+"   Find start of pattern only, flags as per :h search()
+"   N.B. This only exists to allow ExtractMethod to work without matchit.vim
+function! s:get_start_of_block(pattern_start, flags)
+  let cursor_position = getpos(".")
+  let result = search(a:pattern_start, a:flags)
+  call setpos(".",cursor_position)
+
+  return result
+endfunction
+
+" Synopsis:
 "   Find pattern to matching end, flags as per :h search()
 function! s:get_range_for_block(pattern_start, flags)
   " matchit.vim required 
   if !exists("g:loaded_matchit") 
-    throw("matchit.vim (http://www.vim.org/scripts/script.php?script_id=39) required for RenameLocalVariable()")
+    throw("matchit.vim (http://www.vim.org/scripts/script.php?script_id=39) required")
   endif
 
   let cursor_position = getpos(".")
 
   " TODO: Need alternative to remove matchit.vim dep - matchpair() ?
-  let block_start = search(a:pattern_start, a:flags)
+  let block_start = s:get_start_of_block(a:pattern_start, a:flags)
   normal %
   let block_end = line(".")
 
@@ -264,7 +275,7 @@ function! ExtractMethod() range
   let has_trailing_newline = strridx(selection,"\n") == (strlen(selection) - 1) ? 1 : 0
 
   " Get the block for the current method
-  let [method_start, method_end] = s:get_range_for_block('\<def\>','Wb' )
+  let method_start = s:get_start_of_block('\<def\>','Wb')
 
   " Build new method text, split into a list for easy insertion
   let method_lines = split("def " . name . "\n" . selection . (has_trailing_newline ? "" : "\n") . "end\n", "\n", 1)
