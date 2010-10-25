@@ -27,16 +27,28 @@ function! s:get_input(message, error_message)
 endfunction
 
 " Synopsis:
+"   Param: Optional parameter of '1' dictates cut, rather than copy
 "   Returns the text that was selected when the function was invoked
 "   without clobbering any registers
-function! s:get_visual_selection() 
+function! s:get_visual_selection(...) 
   try
     let a_save = @a
-    normal! gv"ay
+    if a:0 >= 1 && a:1 == 1
+      normal! gv"ad
+    else
+      normal! gv"ay
+    endif
     return @a
   finally
     let @a = a_save
   endtry
+endfunction
+
+" Synopsis:
+"   Copies, removes, then returns the text that was selected when the function was invoked
+"   without clobbering any registers
+function! s:cut_visual_selection() 
+  return s:get_visual_selection(1)
 endfunction
 
 " Synopsis:
@@ -201,7 +213,7 @@ endfunction
 "   the cursor only, for now. 
 function! RenameVariableProxy() 
   let selection = s:get_visual_selection()
-  
+
   let left_of_selection = getline(".")[col(".")-2]
   if left_of_selection == "@"
     throw "Use RenameInstanceVariable() to rename instance variables"
@@ -238,7 +250,7 @@ endfunction
 " Synopsis:
 "   Extracts the selected scope into a method above the scope of the
 "   current method
-function! ExtractMethod() range
+function! ExtractMethod() range 
   try
     let name = s:get_input("Method name: ", "No method name given!")
   catch
@@ -246,22 +258,52 @@ function! ExtractMethod() range
     return
   endtry
 
-  normal! gv
+  let selection = s:cut_visual_selection()
 
-  " Yank & Replace selected range with the method name
-  exec "normal C" . name
-  " Mark source position so we can jump back afterwards
-  " XXX: ideally shouldn't clobber this
-  normal ma
+  " Remove last \n if it exists, as we're adding one on prior to the 'end'
+  let has_trailing_newline = strridx(selection,"\n") == (strlen(selection) - 1) ? 1 : 0
 
-  exec '?\<def\>'
+  " Get the block for the current method
+  let [method_start, method_end] = s:get_range_for_block('\<def\>','Wb' )
 
-  " Mark current position for reindenting the source
-  exec "normal! O" . "def " . name . "\nend\n"
+  " Build new method text, split into a list for easy insertion
+  let method_lines = split("def " . name . "\n" . selection . (has_trailing_newline ? "" : "\n") . "end\n", "\n", 1)
 
-  " Paste yanked range, select entire method & reindent, and jump back to
-  " starting position
-  normal kPkV}k=`a
+  " Start a line above, as we're appending, not inserting
+  let start_line_number = method_start - 1
+
+  " Sanity check
+  if start_line_number < 0 
+    let start_line_number = 0
+  endif
+
+  " Insert new method
+  call append(start_line_number, method_lines) 
+
+  " Insert call to new method, and fix up the source so it makes sense
+  if has_trailing_newline
+    exec "normal i" . name . "\n"
+    normal k
+  else
+    exec "normal i" . name 
+  end
+
+  " Reset cursor position
+  let cursor_position = getpos(".")
+
+  " Fix indent on call to method in case we corrupted it
+  normal V=
+  
+  " Indent new codeblock
+  exec "normal " . start_line_number . "GV" . len(method_lines) . "j="
+
+  " Jump back again, 
+  call setpos(".", cursor_position)
+
+  " Visual mode normally moves the caret, go back
+  if has_trailing_newline 
+    normal $
+  endif
 endfunction
 
 " Synopsis:
