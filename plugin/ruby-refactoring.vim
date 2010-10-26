@@ -144,7 +144,7 @@ function! ExtractConstant()
   " Replace selected text with the constant's name
   exec "normal c" . name
   " Find the enclosing class or module
-  exec "?\\<class\\|module\\>"
+  exec "?^\\<class\\|module\\>"
   " Define the constant inside the class or module
   exec "normal! o" . name . " = " 
   normal! $p
