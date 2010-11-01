@@ -85,7 +85,9 @@ function! s:get_range_for_block(pattern_start, flags)
   let cursor_position = getpos(".")
 
   " TODO: Need alternative to remove matchit.vim dep - matchpair() ?
-  let block_start = s:get_start_of_block(a:pattern_start, a:flags)
+  " let block_start = s:get_start_of_block(a:pattern_start, a:flags)
+  " TODO: PPK Remove this dep again
+  let block_start = search(a:pattern_start, a:flags)
   normal %
   let block_end = line(".")
 
@@ -258,6 +260,117 @@ function! RenameLocalVariable()
   call s:gsub_all_in_range(block_start, block_end, '[^@]\<\zs'.selection.'\>\ze\([^\(]\|$\)', name)
 endfunction
 
+function! s:find_variables( block )
+  let lines = split( a:block, "\n" )
+  let locals = {}
+
+  for line in lines
+    " This regexp can likely be improved to avoid the array deref split later
+    " TODO: Filter out @instance_vars
+    " TODO: This isn't matching variable assignment:  foo = bar 
+    let tokens = matchlist( line, '\([_0-9a-zA-Z\[\]]\+\)\s*=\s*\(.*\)' )
+    " echo tokens
+    if len(tokens) > 0 && tokens[1] != ""
+      if stridx(tokens[1], "[") != -1 
+        let parts = split(tokens[1], "[")
+        let var_name = parts[0]
+      else
+        let var_name = tokens[1]
+      end
+      let locals[var_name] = 1
+    endif
+  endfor
+
+  return keys(locals)
+endfunction
+
+function! ExtractMethod2() range
+  let [block_start, block_end] = s:get_range_for_block('\<def\>','Wb')
+
+  " TODO: Check method parameters for more variables- GAH!
+  " TODO: This doesn't work for partial selections again
+  let pre_selection = join( getline(block_start+1,a:firstline-1), "\n" )
+  let post_selection = join( getline(a:lastline+1,block_end), "\n" )
+  let selection = s:cut_visual_selection()
+
+  let pre_method_variables = s:find_variables( pre_selection )
+  let post_method_variables = s:find_variables( post_selection )
+  let method_variables = s:find_variables( selection )
+
+  " Logic:
+  "   If a variable was assigned/defined before the selection and is used within the
+  "   selection then it needs to be passed into the new method as a parameter
+  "
+  "   If a variable was defined/assigned within the selection it must be
+  "   returned from the method and assigned to a return value IF it's
+  "   referenced AFTER the select
+  let parameters = [] 
+  let retvals = []
+
+  for var in method_variables
+    if index(pre_method_variables, var) != -1
+      call insert(parameters, var) 
+    endif
+    if index(post_method_variables, var) != -1
+      call insert(retvals, var)
+    endif
+  endfor
+
+  let name = "ref_method"
+  "
+  " Remove last \n if it exists, as we're adding one on prior to the 'end'
+  let has_trailing_newline = strridx(selection,"\n") == (strlen(selection) - 1) ? 1 : 0
+
+  " Build new method text, split into a list for easy insertion
+  let method_params = ""
+  if len(parameters) > 0 
+    let method_params = "(" . join(parameters, ",") . ")"
+  endif
+
+  let method_retvals = ""
+  if len(retvals) > 0 
+    let method_retvals = join(retvals,", ")
+  endif
+
+  let method_lines = split("def " . name . method_params . "\n" . selection . (has_trailing_newline ? "" : "\n") . (len(retvals) > 0 ? "return " . method_retvals . "\n" : "") . "end\n", "\n", 1)
+
+  " Start a line above, as we're appending, not inserting
+  let start_line_number = block_start - 1
+
+  " Sanity check
+  if start_line_number < 0 
+    let start_line_number = 0
+  endif
+
+  " Insert new method
+  call append(start_line_number, method_lines) 
+
+  " Insert call to new method, and fix up the source so it makes sense
+  if has_trailing_newline
+    exec "normal i" . (len(retvals) > 0 ? method_retvals . " = " : "") . name . method_params . "\n"
+    normal k
+  else
+    exec "normal i" . name 
+  end
+
+  " Reset cursor position
+  let cursor_position = getpos(".")
+
+  " Fix indent on call to method in case we corrupted it
+  normal V=
+  
+  " Indent new codeblock
+  exec "normal " . start_line_number . "GV" . len(method_lines) . "j="
+
+  " Jump back again, 
+  call setpos(".", cursor_position)
+
+  " Visual mode normally moves the caret, go back
+  if has_trailing_newline 
+    normal $
+  endif
+endfunction
+
 " Synopsis:
 "   Extracts the selected scope into a method above the scope of the
 "   current method
@@ -268,7 +381,7 @@ function! ExtractMethod() range
     echo v:exception
     return
   endtry
-
+  
   let selection = s:cut_visual_selection()
 
   " Remove last \n if it exists, as we're adding one on prior to the 'end'
@@ -355,7 +468,7 @@ command! -range RExtractConstant        call ExtractConstant()
 command! -range RExtractLocalVariable   call ExtractLocalVariable()
 command! -range RRenameLocalVariable    call RenameLocalVariable()
 command! -range RRenameInstanceVariable call RenameInstanceVariable()
-command! -range RExtractMethod          call ExtractMethod()
+command! -range RExtractMethod          call ExtractMethod2()
 
 " Mappings:
 "
@@ -370,6 +483,9 @@ vnoremap <leader>relv :RExtractLocalVariable<cr>
 vnoremap <leader>rrlv :RRenameLocalVariable<cr>
 vnoremap <leader>rriv :RRenameInstanceVariable<cr>
 vnoremap <leader>rem  :RExtractMethod<cr>
+
+" TODO: For some reason, the command method doesn't set the range properly :(
+vnoremap <leader>fufu :call ExtractMethod2()<cr>
 
 " TODO: PPK - Revisit this, not convinced the proxy fn is such a good idea in retrospect 
 nnoremap <leader>rrlv viw:call RenameVariableProxy()<cr>
