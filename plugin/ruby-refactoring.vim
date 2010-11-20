@@ -356,6 +356,32 @@ function! InlineTemp()
   exec ':.s/\<' . @a . '\>/' . @b
 endfunction
 
+" Synopsis:
+"   converts a post-conditional expression to a conditional expression
+"   note: will search backwards until it finds the first conditional
+function! ConvertPostConditional()
+  " go to end of current line
+  normal $
+  " search backwards for the conditional operator
+  call search('\<if\|unless\|while\|until\>', 'bW')
+  " save original value of buffer a into temp variable
+  let original_value = @a
+  " delete to the end of the line into buffer a
+  normal "ad$
+  " insert new line above 
+  normal O
+  " and paste buffer a
+  normal "ap
+  " restore original value back to register a
+  let @a = original_value
+  " move one line down and add 'end'
+  exec "normal jo" . "end"
+  " move back to the line that you started at
+  normal k
+  " indent the conditional body
+  normal >>
+endfunction
+
 " Commands:
 "
 " Using a simple 'R' prefix for now
@@ -364,6 +390,7 @@ endfunction
 command! RAddParameter                  call AddParameter()
 command! RInlineTemp                    call InlineTemp()
 command! RExtractLet                    call ExtractIntoRspecLet()
+command! RConvertPostConditional        call ConvertPostConditional()
 
 command! -range RExtractConstant        call ExtractConstant()
 command! -range RExtractLocalVariable   call ExtractLocalVariable()
@@ -379,6 +406,7 @@ command! -range RExtractMethod          call ExtractMethod()
 nnoremap <leader>rap  :RAddParameter<cr>
 nnoremap <leader>rit  :RInlineTemp<cr>
 nnoremap <leader>rel  :RExtractLet<cr>
+nnoremap <leader>rcpc :RConvertPostConditional<cr>
 
 vnoremap <leader>rec  :RExtractConstant<cr>
 vnoremap <leader>relv :RExtractLocalVariable<cr>

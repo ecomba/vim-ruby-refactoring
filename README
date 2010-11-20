@@ -23,6 +23,7 @@ Implemented commands/patterns:
 
 :RAddParameter           - Add Parameter 
 :RInlineTemp             - Inline Temp
+:RConvertPostConditional - Convert Post Conditional
 :RExtractConstant        - Extract Constant          (visual selection)
 :RExtractLocalVariable   - Extract Local Variable    (visual selection)
 :RRenameLocalVariable    - Rename Local Variable     (visual selection/variable under the cursor, *REQUIRES matchit.vim*)
@@ -33,6 +34,7 @@ Default bindings:
 
 :nnoremap <leader>rap  :RAddParameter<cr>
 :nnoremap <leader>rit  :RInlineTemp<cr>
+:nnoremap <leader>rcpc :RConvertPostConditional<cr>
 :vnoremap <leader>rec  :RExtractConstant<cr>
 :vnoremap <leader>relv :RExtractLocalVariable<cr>
 :vnoremap <leader>rrlv :RRenameLocalVariable<cr>
