@@ -369,7 +369,7 @@ function! ConvertPostConditional()
   " find the first match for a conditional operator
   let first_match = search(conditional_operators, 'bnW')
 
-  " if the first match isn't on the current line, exit. 
+  " if the first match isn't on the current line, exit.
   if current_line != first_match
     return
   endif
@@ -384,6 +384,8 @@ function! ConvertPostConditional()
   normal O
   " and paste buffer a
   normal "ap
+  " indent conditional properly
+  normal ==
   " restore original value back to register a
   let @a = original_value
   " move one line down and add 'end'
