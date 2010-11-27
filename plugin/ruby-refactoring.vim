@@ -97,6 +97,10 @@ function! s:get_range_for_block(pattern_start, flags)
   return [block_start, block_end]
 endfunction
 
+function! s:dedupe_list(target)
+  call filter(a:target, 'count(a:target,v:val) > 1 ? 0 : 1') 
+endfunction
+
 " Patterns
 
 " Synopsis:
@@ -269,7 +273,7 @@ function! s:find_variables( block )
     " TODO: Filter out @instance_vars
     " TODO: This isn't matching variable assignment:  foo = bar 
     let tokens = matchlist( line, '\([_0-9a-zA-Z\[\]]\+\)\s*=\s*\(.*\)' )
-    " echo tokens
+    "echo tokens
     if len(tokens) > 0 && tokens[1] != ""
       if stridx(tokens[1], "[") != -1 
         let parts = split(tokens[1], "[")
@@ -284,19 +288,52 @@ function! s:find_variables( block )
   return keys(locals)
 endfunction
 
+function! s:determine_variables( block )
+  let statements = split(a:block,'\s\+' )
+  echo statements
+  "let tokens = split(a:block,'\s\+')
+  "echo tokens
+  " Logic:
+  "   Split on ; in case of multiple lines
+  "   Foreach line
+  "     Determine line type
+  "     if line has a single = then 
+  "       grab words to the left as lvars
+  "       grab words to the right as rvars
+  "     if line has a double = then
+  "       grab words to the left and right as rvars 
+  "
+  "   TODO: Handle x = y = z = 10 using a different method
+  "   TODO: Handle sprawling multiline strings
+  "   TODO: Handle comments
+  "   TODO: Handle x == y ? a : b 
+  "
+  " synID() synIDattr()
+endfunction
+
 function! ExtractMethod2() range
+  " TODO: This doesn't work for partial selections again, not sure what the
+  " use-case is for this
   let [block_start, block_end] = s:get_range_for_block('\<def\>','Wb')
 
-  " TODO: Check method parameters for more variables- GAH!
-  " TODO: This doesn't work for partial selections again
+  call s:determine_variables( join( getline(block_start+1,block_end-1), "\n" ) )
+  return 
+
+  let param_selection = getline(block_start)
+  let param_variables = split(matchstr(param_selection,'(\(.*\))','\W\+'),'\W\+')
+
   let pre_selection = join( getline(block_start+1,a:firstline-1), "\n" )
-  let post_selection = join( getline(a:lastline+1,block_end), "\n" )
-  let selection = s:cut_visual_selection()
-
   let pre_method_variables = s:find_variables( pre_selection )
-  let post_method_variables = s:find_variables( post_selection )
-  let method_variables = s:find_variables( selection )
 
+  call extend(pre_method_variables, param_variables)
+  call s:dedupe_list(pre_method_variables)
+
+  let post_selection = join( getline(a:lastline+1,block_end), "\n" )
+  let post_method_variables = s:find_variables( post_selection )
+
+  let selection = s:cut_visual_selection()
+  let method_variables = s:determine_variables( selection )
+  
   " Logic:
   "   If a variable was assigned/defined before the selection and is used within the
   "   selection then it needs to be passed into the new method as a parameter
@@ -304,6 +341,23 @@ function! ExtractMethod2() range
   "   If a variable was defined/assigned within the selection it must be
   "   returned from the method and assigned to a return value IF it's
   "   referenced AFTER the select
+  "
+  "   If something is assigned to a variable (LHS of an = then we need to
+  "   return it)
+  "
+  "   If something is made user of (RHS of an = then we need to parameterise
+  "   it)
+  "
+  "   TODO: We don't handle x,y=x,y but this should be doable
+  "   
+  "   TODO: Attempt to determine if the RHS is a method
+  "
+  "   TODO: Handle @ivars properly
+  "
+  "   TODO: Handle blocks properly { |x| }
+  "
+  "   TODO: If we're extracting the last line in the method, need to look at what it does and ensure
+  "   that we return something equivalent
   let parameters = [] 
   let retvals = []
 
@@ -317,7 +371,7 @@ function! ExtractMethod2() range
   endfor
 
   let name = "ref_method"
-  "
+  
   " Remove last \n if it exists, as we're adding one on prior to the 'end'
   let has_trailing_newline = strridx(selection,"\n") == (strlen(selection) - 1) ? 1 : 0
 
@@ -369,6 +423,188 @@ function! ExtractMethod2() range
   if has_trailing_newline 
     normal $
   endif
+endfunction
+
+function! s:next_token( str )
+endfunction
+
+function! s:tokenize( block )
+  " replace newline with newline marker
+  " collapse all whitespace to single characters
+  " join lines together for multiple line strings
+  " strip abonormalities to get a chain of tokens
+
+  " for easy tokenisation, turn newlines into expression separators
+  let stripped_block = tr( a:block, "\n", ";" )
+
+  " todo refactor this
+
+  let tokens = []
+
+  let ofs = match( stripped_block, '\W' )
+  while ofs != -1
+    if ofs == 0 
+      let ofs = ofs + 1 
+    endif
+
+    let token = strpart( stripped_block, 0, ofs )
+    call add( tokens, token )
+    let stripped_block = strpart( stripped_block, ofs )
+    let ofs = match( stripped_block, '\W' )
+  endwhile
+
+  let ofs = match( stripped_block, '$' )
+  let token = strpart( stripped_block, 0, ofs )
+  call add( tokens, token )
+
+  return tokens
+endfunction
+
+function! s:tokenize2( block )
+  let stripped_block = tr( a:block, "\n", ";" )
+
+  let tokens = []
+
+  let ofs = 0
+  while 1
+    let a = matchstr( a:block, '\v^(,|\(|\)|\d+\.\d+|\:?\w+|\s+|\''|\"|\=|\S+)', ofs )
+    if a == ""
+      break
+    endif
+    let ofs = ofs + len(a)
+    call add(tokens,a)
+  endwhile
+
+  return tokens
+endfunction
+
+function! s:identify_tokens( tokenlist )
+  let symbols = []
+  for token in a:tokenlist 
+    if match( token,'^\s\+$' ) != -1
+      let sym = "WS"
+    elseif token == "="
+      let sym = "ASSIGN"
+    elseif token == '"'
+      let sym = "DQS"
+    else
+      let sym = token
+    end
+    call add(symbols,sym)
+  endfor
+
+  return symbols
+endfunction
+
+function! s:identify_tokens2( tokenlist )
+  let symbols = []
+  let tokens = []
+  let tokenstack = []
+  let symbolstack = []
+  let lastsym = "WS"
+
+  let i = 0
+  while 1
+    let token = get(a:tokenlist,i,"")
+
+    if match( token,'^\s\+$' ) != -1
+      let sym = "WS"
+    elseif token == ':'
+      let sym = "COLON"
+    elseif match( token,'\v^:\w+$' ) != -1
+      let sym = "SYMBOL"
+    elseif match( token,'\v^\w+$' ) != -1
+      let sym = "VARFUN"
+    elseif match( token,'\v^\W+$' ) != -1
+      let sym = "OPER"
+    elseif token == '"'
+      let sym = "DQS"
+    elseif token == "'"
+      let sym = "SQS"
+    else
+      let sym = "OTHER"
+    end
+
+    " combine and push to proper stacks
+    if lastsym != sym 
+      if !empty(symbolstack)
+        call add(tokens,join(tokenstack,'')) 
+        call add(symbols,symbolstack[0]) 
+        let tokenstack = []
+        let symbolstack = []
+      endif
+    endif
+      
+    " push to the stacks
+    call add(tokenstack, token)
+    call add(symbolstack, sym)
+
+    let lastsym = sym
+
+    if (token == "")
+      break
+    endif
+
+    let i = i + 1
+  endwhile
+
+  echo tokens
+  echo symbols
+endfunction
+
+function! s:identify_tokens3( tokenlist )
+  let symbols = []
+  let reserved = [ "alias", "and", "BEGIN", "begin", "break", "case", "class", "def", "defined?", "do", "else", "elsif", "END", "end", "ensure", "false", "for", "if", "in", "module" ]
+
+  for token in a:tokenlist
+    if index(reserved,token) != -1
+      let sym = "KEYWORD"
+    elseif match(token, '\v^\s+$') != -1
+      let sym = "WS"
+    elseif match(token, '\v^\:\w+$') != -1
+      let sym = "SYMBOL"
+    elseif match(token, '\v^\I\i*$') != -1
+      let sym = "VAR"
+    elseif match(token, '\v^\d+(\.\d+)?$') != -1
+      let sym = "CONST"
+    elseif token == '=' 
+      let sym = 'ASSIGN'
+    elseif token == ',' 
+      let sym = 'COMMA'
+    elseif token == '"' 
+      let sym = 'DQUOTE'
+    elseif token == "'" 
+      let sym = 'SQUOTE'
+    elseif token == '(' 
+      let sym = 'LPAREN'
+    elseif token == ')' 
+      let sym = 'RPAREN'
+    else
+      let sym = "OPER"
+    endif
+
+    if sym != "WS" 
+      echo sym ":" token 
+    endif
+
+    call add(symbols,sym)
+  endfor
+
+  echo symbols
+endfunction
+
+function! ExtractMethod3() 
+  let testcase = "if variable != myvalueinnit && blah <= this <=> that || stuff | blah & beep unless var2=\"beep\" :somesymbol < 1233 + 15.21 func2(123, 'beep', :symbol)" 
+  echo testcase
+
+  "let tokens = s:tokenize(testcase) 
+  "echo tokens
+
+  let tokens = s:tokenize2(testcase)
+
+  "let symbols = s:identify_tokens( tokens )
+  "echo symbols
+  call s:identify_tokens3( tokens )
 endfunction
 
 " Synopsis:
