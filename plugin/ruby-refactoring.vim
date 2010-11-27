@@ -467,7 +467,7 @@ function! s:tokenize2( block )
 
   let ofs = 0
   while 1
-    let a = matchstr( a:block, '\v^(,|\(|\)|\d+\.\d+|\:?\w+|\s+|\''|\"|\=|\S+)', ofs )
+    let a = matchstr( stripped_block, '\v^(;|,|\(|\)|\d+\.\d+|\:?\w+|\s+|\''|\"|\=|\S+)', ofs )
     if a == ""
       break
     endif
@@ -554,7 +554,8 @@ endfunction
 
 function! s:identify_tokens3( tokenlist )
   let symbols = []
-  let reserved = [ "alias", "and", "BEGIN", "begin", "break", "case", "class", "def", "defined?", "do", "else", "elsif", "END", "end", "ensure", "false", "for", "if", "in", "module" ]
+  let statements = []
+  let reserved = [ "alias", "and", "BEGIN", "begin", "break", "case", "class", "def", "defined?", "do", "else", "elsif", "END", "end", "ensure", "false", "for", "if", "in", "module", "next", "nil", "not", "or", "redo", "rescue", "retry", "return", "self", "super", "then", "true", "undef", "unless", "until", "when", "while", "yield" ]
 
   for token in a:tokenlist
     if index(reserved,token) != -1
@@ -579,32 +580,32 @@ function! s:identify_tokens3( tokenlist )
       let sym = 'LPAREN'
     elseif token == ')' 
       let sym = 'RPAREN'
+    elseif token == ';' 
+      if len(symbols) > 0 
+        call add(statements, symbols)
+        let symbols = []
+        continue
+      endif
     else
       let sym = "OPER"
     endif
 
-    if sym != "WS" 
-      echo sym ":" token 
-    endif
-
-    call add(symbols,sym)
+    call add(symbols,[token,sym])
   endfor
 
-  echo symbols
+  return statements
 endfunction
 
 function! ExtractMethod3() 
-  let testcase = "if variable != myvalueinnit && blah <= this <=> that || stuff | blah & beep unless var2=\"beep\" :somesymbol < 1233 + 15.21 func2(123, 'beep', :symbol)" 
+  let testcase = "def mymethod( param1, param2 )\nputs 'hello, world'\nend\n" 
   echo testcase
 
-  "let tokens = s:tokenize(testcase) 
-  "echo tokens
-
   let tokens = s:tokenize2(testcase)
+  let statements = s:identify_tokens3( tokens )
 
-  "let symbols = s:identify_tokens( tokens )
-  "echo symbols
-  call s:identify_tokens3( tokens )
+  for statement in statements 
+    echo statement
+  endfor
 endfunction
 
 " Synopsis:
@@ -665,6 +666,7 @@ function! ExtractMethod() range
     normal $
   endif
 endfunction
+
 
 " Synopsis:
 "   Inlines a variable
