@@ -461,13 +461,12 @@ function! s:tokenize( block )
 endfunction
 
 function! s:tokenize2( block )
-  let stripped_block = tr( a:block, "\n", ";" )
-
+  let stripped_block = tr( a:block, "\n\r\t", ";  " )
   let tokens = []
 
   let ofs = 0
   while 1
-    let a = matchstr( stripped_block, '\v^(;|,|\(|\)|\d+\.\d+|\:?\w+|\s+|\''|\"|\=|\S+)', ofs )
+    let a = matchstr( stripped_block, '\v^(#|;|,|\(|\)|\d+\.\d+|(\:|\@)?\w+|\s+|\''[^\'']*\''|\"[^\"]*\"|\=|\S+)', ofs )
     if a == ""
       break
     endif
@@ -517,10 +516,6 @@ function! s:identify_tokens2( tokenlist )
       let sym = "VARFUN"
     elseif match( token,'\v^\W+$' ) != -1
       let sym = "OPER"
-    elseif token == '"'
-      let sym = "DQS"
-    elseif token == "'"
-      let sym = "SQS"
     else
       let sym = "OTHER"
     end
@@ -557,7 +552,13 @@ function! s:identify_tokens3( tokenlist )
   let statements = []
   let reserved = [ "alias", "and", "BEGIN", "begin", "break", "case", "class", "def", "defined?", "do", "else", "elsif", "END", "end", "ensure", "false", "for", "if", "in", "module", "next", "nil", "not", "or", "redo", "rescue", "retry", "return", "self", "super", "then", "true", "undef", "unless", "until", "when", "while", "yield" ]
 
+  let ignore_to_eos = 0
+
   for token in a:tokenlist
+    "if token == 'def' || token == "if"
+      "let sym = 'BLOCKSTART'
+    "elseif token == 'end' 
+      "let sym = 'BLOCKEND'
     if index(reserved,token) != -1
       let sym = "KEYWORD"
     elseif match(token, '\v^\s+$') != -1
@@ -566,8 +567,14 @@ function! s:identify_tokens3( tokenlist )
       let sym = "SYMBOL"
     elseif match(token, '\v^\I\i*$') != -1
       let sym = "VAR"
+    elseif match(token, '\v^\@\I\i*$') != -1
+      let sym = "IVAR"
     elseif match(token, '\v^\d+(\.\d+)?$') != -1
       let sym = "CONST"
+    elseif token[0] == "'" || token[0] == '"'
+      let sym = "STR"
+    elseif token == '#' 
+      let ignore_to_eos = 1
     elseif token == '=' 
       let sym = 'ASSIGN'
     elseif token == ',' 
@@ -581,31 +588,162 @@ function! s:identify_tokens3( tokenlist )
     elseif token == ')' 
       let sym = 'RPAREN'
     elseif token == ';' 
+      let sym = "EOS"
       if len(symbols) > 0 
         call add(statements, symbols)
         let symbols = []
+        let ignore_to_eos = 0
         continue
       endif
     else
       let sym = "OPER"
     endif
 
-    call add(symbols,[token,sym])
+    if ignore_to_eos == 1
+      let sym = "COMMENT"
+    endif
+
+    if sym != "WS" 
+      call add(symbols,[sym,token])
+    endif
   endfor
+
+  if len(symbols) > 1
+    call add(statements,symbols)
+  endif
 
   return statements
 endfunction
 
-function! ExtractMethod3() 
-  let testcase = "def mymethod( param1, param2 )\nputs 'hello, world'\nend\n" 
-  echo testcase
+function! s:identify_methods( tuples )
+  let lasttuple = []
+  for tuple in a:tuples 
+    let lastsym = get(lasttuple,0,"")
+    let sym = tuple[0]
+    if ((sym == "LPAREN") && (lastsym == "VAR")) || ((sym == "VAR") && (lastsym == "VAR")) || ((sym == "STR" && lastsym == "VAR"))
+      let lasttuple[0] = "METHOD"
+    endif
+    let lasttuple = tuple
+  endfor
+endfunction
 
-  let tokens = s:tokenize2(testcase)
-  let statements = s:identify_tokens3( tokens )
+function! s:identify_variables( tuples )
+  let assigned = []
+  let referenced = []
+
+  for tuple in a:tuples
+    if tuple[0] == "ASSIGN"
+      let assigned = deepcopy(referenced)
+      let referenced = []
+    elseif tuple[0] == "VAR" 
+      call add(referenced,tuple[1])
+    endif
+  endfor
+
+  return [assigned, referenced]
+endfunction
+
+function! s:determine_variables3(block) 
+  let tokens = s:tokenize2(a:block)
+  let statements = s:identify_tokens3(tokens)
+
+  let assigned = []
+  let referenced = []
 
   for statement in statements 
-    echo statement
+    call s:identify_methods( statement )
+    let results = s:identify_variables( statement )
+    call extend(assigned,results[0])
+    call extend(referenced,results[1])
   endfor
+
+  call s:dedupe_list(assigned)
+  call s:dedupe_list(referenced)
+
+  return [assigned,referenced]
+endfunction
+
+function! s:insert_new_method(name, selection, parameters, retvals, block_start)
+  " Remove last \n if it exists, as we're adding one on prior to the 'end'
+  let has_trailing_newline = strridx(a:selection,"\n") == (strlen(a:selection) - 1) ? 1 : 0
+
+  " Build new method text, split into a list for easy insertion
+  let method_params = ""
+  if len(a:parameters) > 0 
+    let method_params = "(" . join(a:parameters, ",") . ")"
+  endif
+
+  let method_retvals = ""
+  if len(a:retvals) > 0 
+    let method_retvals = join(a:retvals,", ")
+  endif
+
+  let method_lines = split("def " . a:name . method_params . "\n" . a:selection . (has_trailing_newline ? "" : "\n") . (len(a:retvals) > 0 ? "return " . method_retvals . "\n" : "") . "end\n", "\n", 1)
+
+  " Start a line above, as we're appending, not inserting
+  let start_line_number = a:block_start - 1
+
+  " Sanity check
+  if start_line_number < 0 
+    let start_line_number = 0
+  endif
+
+  " Insert new method
+  call append(start_line_number, method_lines) 
+
+  " Insert call to new method, and fix up the source so it makes sense
+  if has_trailing_newline
+    exec "normal i" . (len(a:retvals) > 0 ? method_retvals . " = " : "") . a:name . method_params . "\n"
+    normal k
+  else
+    exec "normal i" . a:name 
+  end
+
+  " Reset cursor position
+  let cursor_position = getpos(".")
+
+  " Fix indent on call to method in case we corrupted it
+  normal V=
+  
+  " Indent new codeblock
+  exec "normal " . start_line_number . "GV" . len(method_lines) . "j="
+
+  " Jump back again, 
+  call setpos(".", cursor_position)
+
+  " Visual mode normally moves the caret, go back
+  if has_trailing_newline 
+    normal $
+  endif
+endfunction
+
+function! ExtractMethod3() range
+  let [block_start, block_end] = s:get_range_for_block('\<def\>','Wb')
+
+  let pre_selection = join( getline(block_start+1,a:firstline-1), "\n" )
+  let pre_selection_variables = s:determine_variables3(pre_selection)
+
+  let post_selection = join( getline(a:lastline+1,block_end), "\n" )
+  let post_selection_variables = s:determine_variables3(post_selection)
+
+  let selection = s:cut_visual_selection()
+  let selection_variables = s:determine_variables3(selection)
+
+  let parameters = []
+  let retvals = []
+
+  " determine parameters
+  for var in selection_variables[1]
+    call insert(parameters,var)
+  endfor
+
+  for var in selection_variables[0]
+    if index(post_selection_variables[1], var) != -1
+      call insert(retvals, var)
+    endif
+  endfor
+
+  call s:insert_new_method("ref_method", selection, parameters, retvals, block_start)
 endfunction
 
 " Synopsis:
