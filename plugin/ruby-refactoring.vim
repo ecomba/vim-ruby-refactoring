@@ -460,6 +460,7 @@ function! s:tokenize( block )
   return tokens
 endfunction
 
+" Improve this with ref to http://www.zenspider.com/Languages/Ruby/QuickRef.html#4 
 function! s:tokenize2( block )
   let stripped_block = tr( a:block, "\n\r\t", ";  " )
   let tokens = []
