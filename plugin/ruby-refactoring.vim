@@ -264,204 +264,8 @@ function! RenameLocalVariable()
   call s:gsub_all_in_range(block_start, block_end, '[^@]\<\zs'.selection.'\>\ze\([^\(]\|$\)', name)
 endfunction
 
-function! s:find_variables( block )
-  let lines = split( a:block, "\n" )
-  let locals = {}
-
-  for line in lines
-    " This regexp can likely be improved to avoid the array deref split later
-    " TODO: Filter out @instance_vars
-    " TODO: This isn't matching variable assignment:  foo = bar 
-    let tokens = matchlist( line, '\([_0-9a-zA-Z\[\]]\+\)\s*=\s*\(.*\)' )
-    "echo tokens
-    if len(tokens) > 0 && tokens[1] != ""
-      if stridx(tokens[1], "[") != -1 
-        let parts = split(tokens[1], "[")
-        let var_name = parts[0]
-      else
-        let var_name = tokens[1]
-      end
-      let locals[var_name] = 1
-    endif
-  endfor
-
-  return keys(locals)
-endfunction
-
-function! s:determine_variables( block )
-  let statements = split(a:block,'\s\+' )
-  echo statements
-  "let tokens = split(a:block,'\s\+')
-  "echo tokens
-  " Logic:
-  "   Split on ; in case of multiple lines
-  "   Foreach line
-  "     Determine line type
-  "     if line has a single = then 
-  "       grab words to the left as lvars
-  "       grab words to the right as rvars
-  "     if line has a double = then
-  "       grab words to the left and right as rvars 
-  "
-  "   TODO: Handle x = y = z = 10 using a different method
-  "   TODO: Handle sprawling multiline strings
-  "   TODO: Handle comments
-  "   TODO: Handle x == y ? a : b 
-  "
-  " synID() synIDattr()
-endfunction
-
-function! ExtractMethod2() range
-  " TODO: This doesn't work for partial selections again, not sure what the
-  " use-case is for this
-  let [block_start, block_end] = s:get_range_for_block('\<def\>','Wb')
-
-  call s:determine_variables( join( getline(block_start+1,block_end-1), "\n" ) )
-  return 
-
-  let param_selection = getline(block_start)
-  let param_variables = split(matchstr(param_selection,'(\(.*\))','\W\+'),'\W\+')
-
-  let pre_selection = join( getline(block_start+1,a:firstline-1), "\n" )
-  let pre_method_variables = s:find_variables( pre_selection )
-
-  call extend(pre_method_variables, param_variables)
-  call s:dedupe_list(pre_method_variables)
-
-  let post_selection = join( getline(a:lastline+1,block_end), "\n" )
-  let post_method_variables = s:find_variables( post_selection )
-
-  let selection = s:cut_visual_selection()
-  let method_variables = s:determine_variables( selection )
-  
-  " Logic:
-  "   If a variable was assigned/defined before the selection and is used within the
-  "   selection then it needs to be passed into the new method as a parameter
-  "
-  "   If a variable was defined/assigned within the selection it must be
-  "   returned from the method and assigned to a return value IF it's
-  "   referenced AFTER the select
-  "
-  "   If something is assigned to a variable (LHS of an = then we need to
-  "   return it)
-  "
-  "   If something is made user of (RHS of an = then we need to parameterise
-  "   it)
-  "
-  "   TODO: We don't handle x,y=x,y but this should be doable
-  "   
-  "   TODO: Attempt to determine if the RHS is a method
-  "
-  "   TODO: Handle @ivars properly
-  "
-  "   TODO: Handle blocks properly { |x| }
-  "
-  "   TODO: If we're extracting the last line in the method, need to look at what it does and ensure
-  "   that we return something equivalent
-  let parameters = [] 
-  let retvals = []
-
-  for var in method_variables
-    if index(pre_method_variables, var) != -1
-      call insert(parameters, var) 
-    endif
-    if index(post_method_variables, var) != -1
-      call insert(retvals, var)
-    endif
-  endfor
-
-  let name = "ref_method"
-  
-  " Remove last \n if it exists, as we're adding one on prior to the 'end'
-  let has_trailing_newline = strridx(selection,"\n") == (strlen(selection) - 1) ? 1 : 0
-
-  " Build new method text, split into a list for easy insertion
-  let method_params = ""
-  if len(parameters) > 0 
-    let method_params = "(" . join(parameters, ",") . ")"
-  endif
-
-  let method_retvals = ""
-  if len(retvals) > 0 
-    let method_retvals = join(retvals,", ")
-  endif
-
-  let method_lines = split("def " . name . method_params . "\n" . selection . (has_trailing_newline ? "" : "\n") . (len(retvals) > 0 ? "return " . method_retvals . "\n" : "") . "end\n", "\n", 1)
-
-  " Start a line above, as we're appending, not inserting
-  let start_line_number = block_start - 1
-
-  " Sanity check
-  if start_line_number < 0 
-    let start_line_number = 0
-  endif
-
-  " Insert new method
-  call append(start_line_number, method_lines) 
-
-  " Insert call to new method, and fix up the source so it makes sense
-  if has_trailing_newline
-    exec "normal i" . (len(retvals) > 0 ? method_retvals . " = " : "") . name . method_params . "\n"
-    normal k
-  else
-    exec "normal i" . name 
-  end
-
-  " Reset cursor position
-  let cursor_position = getpos(".")
-
-  " Fix indent on call to method in case we corrupted it
-  normal V=
-  
-  " Indent new codeblock
-  exec "normal " . start_line_number . "GV" . len(method_lines) . "j="
-
-  " Jump back again, 
-  call setpos(".", cursor_position)
-
-  " Visual mode normally moves the caret, go back
-  if has_trailing_newline 
-    normal $
-  endif
-endfunction
-
-function! s:next_token( str )
-endfunction
-
-function! s:tokenize( block )
-  " replace newline with newline marker
-  " collapse all whitespace to single characters
-  " join lines together for multiple line strings
-  " strip abonormalities to get a chain of tokens
-
-  " for easy tokenisation, turn newlines into expression separators
-  let stripped_block = tr( a:block, "\n", ";" )
-
-  " todo refactor this
-
-  let tokens = []
-
-  let ofs = match( stripped_block, '\W' )
-  while ofs != -1
-    if ofs == 0 
-      let ofs = ofs + 1 
-    endif
-
-    let token = strpart( stripped_block, 0, ofs )
-    call add( tokens, token )
-    let stripped_block = strpart( stripped_block, ofs )
-    let ofs = match( stripped_block, '\W' )
-  endwhile
-
-  let ofs = match( stripped_block, '$' )
-  let token = strpart( stripped_block, 0, ofs )
-  call add( tokens, token )
-
-  return tokens
-endfunction
-
 " Improve this with ref to http://www.zenspider.com/Languages/Ruby/QuickRef.html#4 
-function! s:tokenize2( block )
+function! s:ruby_tokenize( block )
   let stripped_block = tr( a:block, "\n\r\t", ";  " )
   let tokens = []
 
@@ -478,77 +282,7 @@ function! s:tokenize2( block )
   return tokens
 endfunction
 
-function! s:identify_tokens( tokenlist )
-  let symbols = []
-  for token in a:tokenlist 
-    if match( token,'^\s\+$' ) != -1
-      let sym = "WS"
-    elseif token == "="
-      let sym = "ASSIGN"
-    elseif token == '"'
-      let sym = "DQS"
-    else
-      let sym = token
-    end
-    call add(symbols,sym)
-  endfor
-
-  return symbols
-endfunction
-
-function! s:identify_tokens2( tokenlist )
-  let symbols = []
-  let tokens = []
-  let tokenstack = []
-  let symbolstack = []
-  let lastsym = "WS"
-
-  let i = 0
-  while 1
-    let token = get(a:tokenlist,i,"")
-
-    if match( token,'^\s\+$' ) != -1
-      let sym = "WS"
-    elseif token == ':'
-      let sym = "COLON"
-    elseif match( token,'\v^:\w+$' ) != -1
-      let sym = "SYMBOL"
-    elseif match( token,'\v^\w+$' ) != -1
-      let sym = "VARFUN"
-    elseif match( token,'\v^\W+$' ) != -1
-      let sym = "OPER"
-    else
-      let sym = "OTHER"
-    end
-
-    " combine and push to proper stacks
-    if lastsym != sym 
-      if !empty(symbolstack)
-        call add(tokens,join(tokenstack,'')) 
-        call add(symbols,symbolstack[0]) 
-        let tokenstack = []
-        let symbolstack = []
-      endif
-    endif
-      
-    " push to the stacks
-    call add(tokenstack, token)
-    call add(symbolstack, sym)
-
-    let lastsym = sym
-
-    if (token == "")
-      break
-    endif
-
-    let i = i + 1
-  endwhile
-
-  echo tokens
-  echo symbols
-endfunction
-
-function! s:identify_tokens3( tokenlist )
+function! s:ruby_identify_tokens( tokenlist )
   let symbols = []
   let statements = []
   let reserved = [ "alias", "and", "BEGIN", "begin", "break", "case", "class", "def", "defined?", "do", "else", "elsif", "END", "end", "ensure", "false", "for", "if", "in", "module", "next", "nil", "not", "or", "redo", "rescue", "retry", "return", "self", "super", "then", "true", "undef", "unless", "until", "when", "while", "yield" ]
@@ -556,10 +290,6 @@ function! s:identify_tokens3( tokenlist )
   let ignore_to_eos = 0
 
   for token in a:tokenlist
-    "if token == 'def' || token == "if"
-      "let sym = 'BLOCKSTART'
-    "elseif token == 'end' 
-      "let sym = 'BLOCKEND'
     if index(reserved,token) != -1
       let sym = "KEYWORD"
     elseif match(token, '\v^\s+$') != -1
@@ -616,7 +346,7 @@ function! s:identify_tokens3( tokenlist )
   return statements
 endfunction
 
-function! s:identify_methods( tuples )
+function! s:ruby_identify_methods( tuples )
   let lasttuple = []
   for tuple in a:tuples 
     let lastsym = get(lasttuple,0,"")
@@ -628,7 +358,7 @@ function! s:identify_methods( tuples )
   endfor
 endfunction
 
-function! s:identify_variables( tuples )
+function! s:ruby_identify_variables( tuples )
   let assigned = []
   let referenced = []
 
@@ -644,16 +374,16 @@ function! s:identify_variables( tuples )
   return [assigned, referenced]
 endfunction
 
-function! s:determine_variables3(block) 
-  let tokens = s:tokenize2(a:block)
-  let statements = s:identify_tokens3(tokens)
+function! s:ruby_determine_variables(block) 
+  let tokens = s:ruby_tokenize(a:block)
+  let statements = s:ruby_identify_tokens(tokens)
 
   let assigned = []
   let referenced = []
 
   for statement in statements 
-    call s:identify_methods( statement )
-    let results = s:identify_variables( statement )
+    call s:ruby_identify_methods( statement )
+    let results = s:ruby_identify_variables( statement )
     call extend(assigned,results[0])
     call extend(referenced,results[1])
   endfor
@@ -664,7 +394,7 @@ function! s:determine_variables3(block)
   return [assigned,referenced]
 endfunction
 
-function! s:insert_new_method(name, selection, parameters, retvals, block_start)
+function! s:em_insert_new_method(name, selection, parameters, retvals, block_start)
   " Remove last \n if it exists, as we're adding one on prior to the 'end'
   let has_trailing_newline = strridx(a:selection,"\n") == (strlen(a:selection) - 1) ? 1 : 0
 
@@ -718,17 +448,27 @@ function! s:insert_new_method(name, selection, parameters, retvals, block_start)
   endif
 endfunction
 
-function! ExtractMethod3() range
+" Synopsis:
+"   Extracts the selected scope into a method above the scope of the
+"   current method
+function! ExtractMethod() range
+  try
+    let name = s:get_input("Method name: ", "No method name given!")
+  catch
+    echo v:exception
+    return
+  endtry
+  
   let [block_start, block_end] = s:get_range_for_block('\<def\>','Wb')
 
   let pre_selection = join( getline(block_start+1,a:firstline-1), "\n" )
-  let pre_selection_variables = s:determine_variables3(pre_selection)
+  let pre_selection_variables = s:ruby_determine_variables(pre_selection)
 
   let post_selection = join( getline(a:lastline+1,block_end), "\n" )
-  let post_selection_variables = s:determine_variables3(post_selection)
+  let post_selection_variables = s:ruby_determine_variables(post_selection)
 
   let selection = s:cut_visual_selection()
-  let selection_variables = s:determine_variables3(selection)
+  let selection_variables = s:ruby_determine_variables(selection)
 
   let parameters = []
   let retvals = []
@@ -744,68 +484,8 @@ function! ExtractMethod3() range
     endif
   endfor
 
-  call s:insert_new_method("ref_method", selection, parameters, retvals, block_start)
+  call s:em_insert_new_method(name, selection, parameters, retvals, block_start)
 endfunction
-
-" Synopsis:
-"   Extracts the selected scope into a method above the scope of the
-"   current method
-function! ExtractMethod() range 
-  try
-    let name = s:get_input("Method name: ", "No method name given!")
-  catch
-    echo v:exception
-    return
-  endtry
-  
-  let selection = s:cut_visual_selection()
-
-  " Remove last \n if it exists, as we're adding one on prior to the 'end'
-  let has_trailing_newline = strridx(selection,"\n") == (strlen(selection) - 1) ? 1 : 0
-
-  " Get the block for the current method
-  let method_start = s:get_start_of_block('\<def\>','Wb')
-
-  " Build new method text, split into a list for easy insertion
-  let method_lines = split("def " . name . "\n" . selection . (has_trailing_newline ? "" : "\n") . "end\n", "\n", 1)
-
-  " Start a line above, as we're appending, not inserting
-  let start_line_number = method_start - 1
-
-  " Sanity check
-  if start_line_number < 0 
-    let start_line_number = 0
-  endif
-
-  " Insert new method
-  call append(start_line_number, method_lines) 
-
-  " Insert call to new method, and fix up the source so it makes sense
-  if has_trailing_newline
-    exec "normal i" . name . "\n"
-    normal k
-  else
-    exec "normal i" . name 
-  end
-
-  " Reset cursor position
-  let cursor_position = getpos(".")
-
-  " Fix indent on call to method in case we corrupted it
-  normal V=
-  
-  " Indent new codeblock
-  exec "normal " . start_line_number . "GV" . len(method_lines) . "j="
-
-  " Jump back again, 
-  call setpos(".", cursor_position)
-
-  " Visual mode normally moves the caret, go back
-  if has_trailing_newline 
-    normal $
-  endif
-endfunction
-
 
 " Synopsis:
 "   Inlines a variable
@@ -845,7 +525,7 @@ command! -range RExtractConstant        call ExtractConstant()
 command! -range RExtractLocalVariable   call ExtractLocalVariable()
 command! -range RRenameLocalVariable    call RenameLocalVariable()
 command! -range RRenameInstanceVariable call RenameInstanceVariable()
-command! -range RExtractMethod          call ExtractMethod2()
+command! -range RExtractMethod          call ExtractMethod()
 
 " Mappings:
 "
@@ -862,7 +542,7 @@ vnoremap <leader>rriv :RRenameInstanceVariable<cr>
 vnoremap <leader>rem  :RExtractMethod<cr>
 
 " TODO: For some reason, the command method doesn't set the range properly :(
-vnoremap <leader>fufu :call ExtractMethod2()<cr>
+vnoremap <leader>fufu :call ExtractMethod()<cr>
 
 " TODO: PPK - Revisit this, not convinced the proxy fn is such a good idea in retrospect 
 nnoremap <leader>rrlv viw:call RenameVariableProxy()<cr>
