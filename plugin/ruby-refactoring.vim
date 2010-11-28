@@ -45,8 +45,8 @@ function! s:get_visual_selection(...)
 endfunction
 
 " Synopsis:
-"   Copies, removes, then returns the text that was selected when the function was invoked
-"   without clobbering any registers
+"   Copies, removes, then returns the text that was selected when
+"   the function was invoked without clobbering any registers
 function! s:cut_visual_selection() 
   return s:get_visual_selection(1)
 endfunction
@@ -150,10 +150,23 @@ function! ExtractConstant()
   " Replace selected text with the constant's name
   exec "normal c" . name
   " Find the enclosing class or module
-  exec "?\\<class\\|module\\>"
+  exec "?^\\<class\\|module\\>"
   " Define the constant inside the class or module
   exec "normal! o" . name . " = " 
   normal! $p
+endfunction
+
+" Synopsis:
+"   Extracts into an Rspec let declaration
+"   Special thanks to ReinH (#vim room at irc.freenode.net)
+function! ExtractIntoRspecLet()
+  normal! "bdd
+  
+  exec "?^\\<describe\\|context\\>"
+  normal! $p
+  exec 's/\v([a-z_][a-zA-Z0-9_]*) \= (.+)/let(:\1) { \2 }'
+  normal V=
+
 endfunction
 
 " Synopsis:
@@ -520,6 +533,7 @@ endfunction
 
 command! RAddParameter                  call AddParameter()
 command! RInlineTemp                    call InlineTemp()
+command! RExtractLet                    call ExtractIntoRspecLet()
 
 command! -range RExtractConstant        call ExtractConstant()
 command! -range RExtractLocalVariable   call ExtractLocalVariable()
@@ -534,6 +548,7 @@ command! -range RExtractMethod          call ExtractMethod()
 
 nnoremap <leader>rap  :RAddParameter<cr>
 nnoremap <leader>rit  :RInlineTemp<cr>
+nnoremap <leader>rel  :RExtractLet<cr>
 
 vnoremap <leader>rec  :RExtractConstant<cr>
 vnoremap <leader>relv :RExtractLocalVariable<cr>
