@@ -1,8 +1,8 @@
 " Ruby Refactoring in VIM
 "
-" Author: Enrique Comba Riepenhausen
+" Author: Enrique Comba Riepenhausen & Paul King
 " Email: enrique@edendevelopment.co.uk
-" Email2: ecomba@gmail.com
+" Email: somecrocodile@gmail.com
 "
 " Acknowledgements:
 " Thanks to Gary Bernhardt for the inspiration for this tool and the original
