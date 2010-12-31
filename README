@@ -47,4 +47,8 @@ Default bindings:
 :vnoremap <leader>rriv :RRenameInstanceVariable<cr>
 :vnoremap <leader>rem  :RExtractMethod<cr>
 
+Additional usage examples (thanks Justin!):
+
+http://justinram.wordpress.com/2010/12/30/vim-ruby-refactoring-series/
+
 Enrique Comba Riepenhausen & Paul King
