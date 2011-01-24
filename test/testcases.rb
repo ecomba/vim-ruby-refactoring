@@ -59,6 +59,6 @@ end
 describe "something" do
   it 'is a foo in the bar' do
     bar = '13'
-    bar.should be_foo
+    far.should be_foo
   end
 end

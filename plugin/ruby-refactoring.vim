@@ -1,4 +1,3 @@
-" Ruby Refactoring in VIM
 "
 " Author: Enrique Comba Riepenhausen (@ecomba) & Paul King (@nrocy)
 " Email: enrique@edendevelopment.co.uk
