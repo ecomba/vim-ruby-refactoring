@@ -7,6 +7,9 @@ Feature: Foo
 
   Scenario: Create a file in VIM
     When I run `vim foo` interactively
-    And I type "ibar^[:x"
+    And I enter insert mode
+    And I type "bar"
+    And I exit insert mode
+    And I enter the command :x
     Then the file "foo" should contain "bar"
 
