@@ -2,7 +2,7 @@ Given /^I have a magic number$/ do
   @input = <<-DOC
 class Foo
   def bar
-    10
+    "some magic number"
   end
 end
 DOC
@@ -10,21 +10,20 @@ end
 
 When /^I extract a constant$/ do
   @commands = <<-DOC
-:normal 3G
-:normal ve
+:normal 3Gvg_
 :RExtractConstant
-ten
+magic_string
 DOC
 end
 
 Then /^I see no magic number$/ do
-  # The constant TEN is actually indented properly in real code
+  # The constant is actually indented properly in real code
   # the string examples cause the odd formatting
   result_of_executing_the_commands.should == <<-DOC
 class Foo
-TEN = 10
+MAGIC_STRING = "some magic number"
   def bar
-    TEN
+    MAGIC_STRING
   end
 end
 DOC
