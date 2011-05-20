@@ -13,7 +13,7 @@ DOC
 end
 
 Then /^I see no temporary variable$/ do
-  execute_commands.should == <<-DOC
+  result_of_executing_the_commands.should == <<-DOC
 puts 10
 DOC
 end
