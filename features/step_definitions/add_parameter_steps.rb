@@ -1,11 +1,11 @@
-Given /^I have a method with no arguments or parentheses$/ do
+Given /^I have a method with no parameters or parentheses$/ do
   @input = <<-DOC
 def my_meth
 end
 DOC
 end
 
-Given /^I have a method with no arguments$/ do
+Given /^I have a method with no parameters$/ do
   @input = <<-DOC
 def my_meth()
 end
