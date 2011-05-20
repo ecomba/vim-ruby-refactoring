@@ -25,19 +25,17 @@ When /^I add a parameter to the method$/ do
 :RAddParameter
 param
 DOC
-
-  @buffer_output = RobotVim::Runner.new.run(:input_file => @input, :commands => @commands)
 end
 
 Then /^I see the method defintion with a parameter$/ do
-  @buffer_output.should == <<-DOC
+  result_of_executing_the_commands.should == <<-DOC
 def my_meth(param)
 end
 DOC
 end
 
 Then /^I see the method defintion with several parameters$/ do
-  @buffer_output.should == <<-DOC
+  result_of_executing_the_commands.should == <<-DOC
 def my_meth(existing, param)
 end
 DOC
