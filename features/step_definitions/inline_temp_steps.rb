@@ -10,12 +10,10 @@ When /^I inline the temporary variable$/ do
 :normal gg
 :RInlineTemp
 DOC
-
-  @buffer_output = execute_commands
 end
 
 Then /^I see no temporary variable$/ do
-  @buffer_output.should == <<-DOC
+  execute_commands.should == <<-DOC
 puts 10
 DOC
 end
