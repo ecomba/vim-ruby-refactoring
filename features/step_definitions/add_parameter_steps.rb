@@ -5,6 +5,13 @@ end
 DOC
 end
 
+Given /^I have a method with no arguments$/ do
+  @input = <<-DOC
+def my_meth()
+end
+DOC
+end
+
 When /^I add a parameter to the method$/ do
   @commands = <<-DOC
 :normal gg
