@@ -1,10 +1,3 @@
-# extract local variable <leader>relv
-class Thing
-  def method_one
-    10
-  end
-end
-
 # rename local variable <leader>rrlv
 def method
   asdf = 10
