@@ -29,10 +29,3 @@ class Foo
     six = five + one
   end
 end
-
-describe "something" do
-  it 'is a foo in the bar' do
-    bar = '13'
-    far.should be_foo
-  end
-end
