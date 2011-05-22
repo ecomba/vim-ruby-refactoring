@@ -1,22 +1,3 @@
-# postconditional <leader>rcpc
-somethign if condition
-
-# inlinetemp <leader>rit
-foo = 10
-puts foo
-
-# addparameter <leader>rap
-def thingy(dependency)
-  stuff
-end
-
-# extract constant <leader>rec
-class Thing
-  def method_one
-    10
-  end
-end
-
 # extract local variable <leader>relv
 class Thing
   def method_one
