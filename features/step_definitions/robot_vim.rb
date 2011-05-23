@@ -1,0 +1,1 @@
+require 'robot-vim'
