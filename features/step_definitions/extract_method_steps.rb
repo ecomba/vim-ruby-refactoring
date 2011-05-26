@@ -32,8 +32,8 @@ class Foo
     @bar = foo
   end
 
-def add_them(three,two)
-  two + three
+  def add_them(three,two)
+    two + three
   end
 
   def method_two
@@ -41,7 +41,7 @@ def add_them(three,two)
     two = 2
     three = 3
     four = two + two
-five = add_them(three,two)
+    five = add_them(three,two)
     six = five + one
   end
 end

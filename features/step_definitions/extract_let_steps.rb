@@ -19,7 +19,7 @@ end
 Then /^I see that there is now an rspec let declaration$/ do
   result_of_executing_the_commands.should == <<-DOC
 describe "something" do
-let(:bar) { 10 }
+  let(:bar) { 10 }
   it "does stuff" do
     bar.should == 10
   end
