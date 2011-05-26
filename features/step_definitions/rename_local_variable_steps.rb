@@ -8,7 +8,6 @@ end
 
 When /^I rename the local variable$/ do
   @commands = <<-DOC
-:set ft=ruby
 :normal 2Gve
 :RRenameLocalVariable
 days_in_week
