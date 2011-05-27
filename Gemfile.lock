@@ -15,6 +15,14 @@ GEM
     macaddr (1.0.0)
     robot-vim (1.1.0)
       uuid (~> 2.3.1)
+    rspec (2.6.0)
+      rspec-core (~> 2.6.0)
+      rspec-expectations (~> 2.6.0)
+      rspec-mocks (~> 2.6.0)
+    rspec-core (2.6.3)
+    rspec-expectations (2.6.0)
+      diff-lcs (~> 1.1.2)
+    rspec-mocks (2.6.0)
     term-ansicolor (1.0.5)
     uuid (2.3.2)
       macaddr (~> 1.0)
@@ -25,3 +33,4 @@ PLATFORMS
 DEPENDENCIES
   cucumber
   robot-vim
+  rspec
