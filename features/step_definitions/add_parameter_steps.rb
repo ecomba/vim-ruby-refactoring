@@ -1,42 +1,16 @@
-Given /^I have a method with no parameters or parentheses$/ do
-  @input = <<-DOC
-def my_meth
-end
-DOC
+Given /^I have the following method:$/ do |method_code|
+  @input = method_code
 end
 
-Given /^I have a method with no parameters$/ do
-  @input = <<-DOC
-def my_meth()
-end
-DOC
+When /^I select the method and execute:$/ do |command|
+  select_method
+  add_to_commands(command)
 end
 
-Given /^I have a method with an existing parameter$/ do
-  @input = <<-DOC
-def my_meth(existing)
-end
-DOC
+When /^I fill in the parameter "([^"]*)"$/ do |parameter|
+  add_to_commands(parameter)
 end
 
-When /^I add a parameter to the method$/ do
-  @commands = <<-DOC
-:normal gg
-:RAddParameter
-param
-DOC
-end
-
-Then /^I see the method defintion with a parameter$/ do
-  result_of_executing_the_commands.should == <<-DOC
-def my_meth(param)
-end
-DOC
-end
-
-Then /^I see the method defintion with several parameters$/ do
-  result_of_executing_the_commands.should == <<-DOC
-def my_meth(existing, param)
-end
-DOC
+Then /^I should see:$/ do |result|
+  result_of_executing_the_commands.should == result
 end
