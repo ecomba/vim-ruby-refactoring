@@ -1,7 +1,6 @@
 Feature: Extract Method :RextractMethod
   Extracts the selected code into a new method of its own.
 
-  @wip
   Scenario: Extract one line assignment into a new method
     Given I have the following code:
     """
