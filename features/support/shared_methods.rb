@@ -30,3 +30,12 @@ end
 def commands
   set_filetype + @commands
 end
+
+def add_return_key
+  @commands << return_key
+end
+
+def select_line
+  @commands = ":normal 7Gvg_"
+  add_return_key
+end

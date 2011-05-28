@@ -47,3 +47,9 @@ class Foo
 end
 DOC
 end
+
+When /^I select \"@commands << return_key\" and execute:$/ do |command|
+  select_line
+  add_to_commands command
+end
+
