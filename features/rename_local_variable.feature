@@ -1,6 +1,10 @@
 Feature: Rename Local Variable :RRenameLocalVariable
   Renames a local variable to be something more meaningful and intention revealing
 
+    Shortcuts:
+      :RRenameLocalVariable
+      <leader>rrlv
+
   Scenario: Rename single occurance of a local variable
     Given I have the following code:
     """

@@ -1,5 +1,9 @@
-Feature: Extract Method :RextractMethod
+Feature: Extract Method :RExtractMethod
   Extracts the selected code into a new method of its own.
+
+    Shortcuts:
+      :RExtractMethod
+      <leader>rem
 
   Scenario: Extract one line assignment into a new method
     Given I have the following code:

@@ -1,6 +1,10 @@
 Feature: Inline Temp :RInlineTemp
   This refactoring takes a temporary variable and inlines the use of it.
 
+    Shortcuts:
+      :RInlineTemp
+      <leader>rit
+
   Scenario: Inline a temporary variable
     Given I have the following code:
     """

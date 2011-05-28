@@ -2,8 +2,8 @@ Feature: Add Parameter :RAddParameter
   This refactoring should add a new parameter to a method definition, regardless of how many the method already has.  
 
     Shortcuts:
-      <leader>rap
       :RAddParameter
+      <leader>rap
 
   Scenario: Add a parameter to a method defined with no parameters or parentheses
     Given I have the following code:

@@ -1,6 +1,10 @@
 Feature: Extract Constant :RExtractConstant
   Extracts the selected range into a constant at the top of the current module/class
 
+    Shortcuts:
+      :RExtractConstant
+      <leader>rec
+
   Scenario: Extract a constant
     Given I have the following code:
     """

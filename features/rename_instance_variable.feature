@@ -1,4 +1,8 @@
-Feature: Renaming instance variable :RenameInstanceVariable
+Feature: Renaming instance variable :RRenameInstanceVariable
+
+    Shortcuts:
+      :RRenameInstanceVariable
+      <leader>rriv
 
   Scenario: Renaming a single occurence of an instance variable
     Given I have the following code:

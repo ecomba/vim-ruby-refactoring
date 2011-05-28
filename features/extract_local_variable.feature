@@ -1,6 +1,10 @@
 Feature: Extract Local Variable :RExtractLocalVariable
   Takes an expression that is being used directly and assigns it to a local variable first
 
+    Shortcuts:
+      :RExtractLocalVariable
+      <leader>relv
+
   Scenario: Extract a local variable from a magic number
     Given I have the following code:
     """

@@ -1,6 +1,10 @@
 Feature: Extract RSpec Let :RExtractLet
   Take an assignment in an rspec specfication and convert it into a let declaration
 
+    Shortcuts:
+      :RExtractLet
+      <leader>rel
+
   Scenario: Extract to rspec let declaration
     Given I have the following code:
     """
