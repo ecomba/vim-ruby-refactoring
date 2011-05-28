@@ -2,7 +2,7 @@ Feature: Add Parameter :RAddParameter
   This refactoring should add a new parameter to a method definition, regardless of how many the method already has.
 
   Scenario: Add a parameter to a method defined with no parameters or parentheses
-    Given I have the following method:
+    Given I have the following code:
     """
     def set_name
     end
@@ -20,7 +20,7 @@ Feature: Add Parameter :RAddParameter
     """
 
   Scenario: Add a parameter to a method defined with no parameters
-    Given I have the following method:
+    Given I have the following code:
     """
     def set_name()
     end
@@ -38,7 +38,7 @@ Feature: Add Parameter :RAddParameter
     """
 
   Scenario: Add a parameter to a method with an existing parameter
-    Given I have the following method:
+    Given I have the following code:
     """
     def set_details(name)
     end

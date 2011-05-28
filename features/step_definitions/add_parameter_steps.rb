@@ -1,5 +1,5 @@
-Given /^I have the following method:$/ do |method_code|
-  @input = method_code
+Given /^I have the following code:$/ do |code|
+  @input = code
 end
 
 When /^I select the method and execute:$/ do |command|
