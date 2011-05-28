@@ -1,6 +1,21 @@
-Feature: Renaming instance variable
+Feature: Renaming instance variable :RenameInstanceVariable
 
   Scenario: Renaming a single occurence of an instance variable
-    Given I have a single occurence of an instance variable
-    When I rename the instance variable
-    Then I see the renamed instance variable
+    Given I have the following code:
+    """
+    def method
+      @instance_variable
+    end
+    """
+    When I select the instance variable and execute:
+    """
+    :RRenameInstanceVariable
+    """
+    And I fill in the parameter "foo"
+    Then I should see:
+    """
+    def method
+      @foo
+    end
+
+    """
