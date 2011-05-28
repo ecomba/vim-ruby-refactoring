@@ -13,6 +13,11 @@ def select_method
   @commands << return_key
 end
 
+def select_magic_number
+  @commands = ':normal 3Gvg_'
+  @commands << return_key
+end
+
 def add_to_commands command
   @commands << command
   @commands << return_key
