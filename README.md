@@ -35,7 +35,7 @@ I will go with it (clone at your own risk).
     :RRenameInstanceVariable - Rename Instance Variable  (visual selection, *REQUIRES matchit.vim*)
     :RExtractMethod          - Extract Method            (visual selection, *REQUIRES matchit.vim*)
 
-Default bindings:
+## Default bindings:
 
     :nnoremap <leader>rap  :RAddParameter<cr>
     :nnoremap <leader>rcpc :RConvertPostConditional<cr>
