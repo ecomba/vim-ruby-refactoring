@@ -1,7 +1,20 @@
-Feature: Convert Post Conditional
+Feature: Convert Post Conditional :RConvertPostConditional
   Takes a post-conditional expression and converts it into a regular conditional statement
 
+  @wip
   Scenario: Convert a simple if post-conditional expression
-    Given I have a post-conditional if expression
-    When I convert it to a regular conditional expression
-    Then I see a regular conditioal expression
+    Given I have the following code:
+    """
+    do_something if condition
+    """
+    When I go to the line and execute:
+    """
+    :RConvertPostConditional
+    """
+    Then I should see:
+    """
+    if condition
+      do_something 
+    end
+
+    """

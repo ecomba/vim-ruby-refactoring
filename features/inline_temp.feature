@@ -7,7 +7,7 @@ Feature: Inline Temp :RInlineTemp
     foo = 10
     puts foo
     """
-    When I select "foo" and execute:
+    When I go to the line and execute:
     """
     :RInlineTemp
     """
