@@ -1,28 +1,10 @@
-Given /^I have an rspec specification with an assignment$/ do
-  @input = <<-DOC
-describe "something" do
-  it "does stuff" do
-    bar = 10
-    bar.should == 10
-  end
-end
-DOC
+When /^I select the variable assignment and execute:$/ do |command|
+  select_variable_assignment
+  add_to_commands command
 end
 
-When /^I extract to rspec let$/ do
-  @commands = <<-DOC
-:normal 3G
-:RExtractLet
-DOC
+def select_variable_assignment
+  @commands = ':normal 3G'
+  add_return_key
 end
 
-Then /^I see that there is now an rspec let declaration$/ do
-  result_of_executing_the_commands.should == <<-DOC
-describe "something" do
-  let(:bar) { 10 }
-  it "does stuff" do
-    bar.should == 10
-  end
-end
-DOC
-end
