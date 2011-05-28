@@ -53,3 +53,7 @@ When /^I select \"@commands << return_key\" and execute:$/ do |command|
   add_to_commands command
 end
 
+def select_line
+  @commands = ":normal 7Gvg_"
+  add_return_key
+end

@@ -13,11 +13,6 @@ def select_method
   add_return_key
 end
 
-def select_magic_number
-  @commands = ':normal 3Gvg_'
-  add_return_key
-end
-
 def add_to_commands command
   @commands << command
   add_return_key
@@ -35,7 +30,14 @@ def add_return_key
   @commands << return_key
 end
 
-def select_line
-  @commands = ":normal 7Gvg_"
-  add_return_key
+Given /^I have the following code:$/ do |code|
+  @input = code
+end
+
+When /^I fill in the parameter "([^"]*)"$/ do |parameter|
+  add_to_commands(parameter)
+end
+
+Then /^I should see:$/ do |result|
+  result_of_executing_the_commands.should == result
 end
