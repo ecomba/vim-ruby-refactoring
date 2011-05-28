@@ -58,3 +58,22 @@ Feature: Add Parameter :RAddParameter
     end
 
     """
+
+  @issues
+  Scenario: Add a parameter to a method with an existing parameter but not brackets
+    Given I have the following code:
+    """
+    def set_details name 
+    end
+    """
+    When I select the method and execute:
+    """
+    :RAddParameter
+    """
+    And I fill in the parameter "dob"
+    Then I should see:
+    """
+    def set_details name, dob
+    end
+
+    """
