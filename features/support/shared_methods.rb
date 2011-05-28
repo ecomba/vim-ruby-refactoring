@@ -10,17 +10,17 @@ end
 
 def select_method
   @commands = ':normal gg'
-  @commands << return_key
+  add_return_key
 end
 
 def select_magic_number
   @commands = ':normal 3Gvg_'
-  @commands << return_key
+  add_return_key
 end
 
 def add_to_commands command
   @commands << command
-  @commands << return_key
+  add_return_key
 end
 
 def set_filetype
