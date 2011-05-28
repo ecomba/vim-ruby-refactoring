@@ -1,7 +1,6 @@
 Feature: Convert Post Conditional :RConvertPostConditional
   Takes a post-conditional expression and converts it into a regular conditional statement
 
-  @wip
   Scenario: Convert a simple if post-conditional expression
     Given I have the following code:
     """
