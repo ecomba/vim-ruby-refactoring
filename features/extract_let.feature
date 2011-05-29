@@ -31,6 +31,16 @@ Feature: Extract RSpec Let :RExtractLet
     """
 
   Scenario: Nothing to extract
-    Given I have an rspec specificasion with no assignments
-    When I attempt to extract to rspec let
+    Given I have the following code:
+    """
+    describe "something" do
+      let (:x) { 10 }
+      it "does stuff" do
+        bar.should == 10
+      end
+    """
+    When I select the let and execute:
+    """
+    :RextractLet
+    """
     Then I see no errors
