@@ -29,3 +29,8 @@ Feature: Extract RSpec Let :RExtractLet
     end
 
     """
+
+  Scenario: Nothing to extract
+    Given I have an rspec specificasion with no assignments
+    When I attempt to extract to rspec let
+    Then I see no errors
