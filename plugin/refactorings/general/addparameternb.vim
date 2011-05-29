@@ -19,12 +19,7 @@ function! AddParameterNB()
     exec "?\\<def\\>"
   endif
 
-  let closing_bracket_index = stridx(getline("."), ")")
-  let opening_bracket_index = stridx(getline("."), "(")
-
-  if closing_bracket_index == -1
-    execute "normal A " . name . "\<Esc>"
-  endif
+  execute "normal A " . name . "\<Esc>"
 
   " Restore caret position
   call setpos(".", cursor_position)
