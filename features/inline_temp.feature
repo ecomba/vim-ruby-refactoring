@@ -51,7 +51,7 @@ Feature: Inline Temp :RInlineTemp
       y = x + 1
     end
     """
-    When I select "x = 5" and execute:
+    When I go to line "2" and execute:
     """
     :RInlineTemp
     """
@@ -86,5 +86,25 @@ Feature: Inline Temp :RInlineTemp
     foo = 5 + 10
     x = 10
     bar = x + 10
+
+    """
+
+  Scenario: Inline a temporary variable to all variables within the context of a method
+    Given I have the following code:
+    """
+    a = 1
+    b = a + 1
+    a = 2
+    c = a + 1
+    """
+    When I go to line "3" and execute:
+    """
+    :RInlineTemp
+    """
+    Then I should see:
+    """
+    a = 1
+    b = a + 1
+    c = 2 + 1
 
     """

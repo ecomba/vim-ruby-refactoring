@@ -9,8 +9,8 @@ def return_key
 end
 
 def select_method
-  @commands = ':normal gg'
-  add_return_key
+  first_line = "1"
+  go_to first_line
 end
 
 def add_to_commands command
@@ -28,4 +28,9 @@ end
 
 def add_return_key
   @commands << return_key
+end
+
+def go_to line
+  @commands = ":normal #{line}G"
+  add_return_key
 end
