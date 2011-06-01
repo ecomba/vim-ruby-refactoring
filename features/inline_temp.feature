@@ -68,3 +68,23 @@ Feature: Inline Temp :RInlineTemp
       y = x + 1
     end
     """
+
+  @issues
+  Scenario: Inline a temporary variable to all variables within the context of a method
+    Given I have the following code:
+    """
+    x = 5
+    foo = x + 10
+    x = 10
+    bar = x + 10
+    """
+    When I go to the line and execute:
+    """
+    :RInlineTemp
+    """
+    Then I should see:
+    """
+    foo = 5 + 10
+    x = 10
+    bar = x + 10
+    """
