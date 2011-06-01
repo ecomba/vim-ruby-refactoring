@@ -36,3 +36,35 @@ Feature: Inline Temp :RInlineTemp
     y = 5 and z = 5
 
     """
+
+  @issues @wip
+  Scenario: Inline a temporary variable to all variables within the context of a method
+    Given I have the following code:
+    """
+    def some_method
+      x = 5
+      y = x and z = x
+      r = x + 2
+    end
+
+    def some_other_method
+      x = 2
+      y = x + 1
+    end
+    """
+    When I select "x = 5" and execute:
+    """
+    :RInlineTemp
+    """
+    Then I should see:
+    """
+    def some_method
+      y = 5 and z = 5
+      r = 5 + 2
+    end
+
+    def some_other_method
+      x = 2
+      y = x + 1
+    end
+    """
