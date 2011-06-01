@@ -3,6 +3,7 @@
 function! InlineTemp()
   " Copy the variable under the cursor into the 'a' register
   " XXX: How do I copy into a variable so I don't pollute the registers?
+  let original_a = @a
   normal "ayiw
 
   " It takes 4 diws to get the variable, equal sign, and surrounding
@@ -10,16 +11,20 @@ function! InlineTemp()
   " respect.
   normal 4diw
   " Delete the expression into the 'b' register
+  let original_b = @b
   normal "bd$
 
   " Delete the remnants of the line
   normal dd
-  " Go to the end of the previous line so we can start our search for the
-  " usage of the variable to replace. Doing '0' instead of 'k$' doesn't
-  " work; I'm not sure why.
-  normal k$
-  " Find the next occurence of the variable
-  exec '/\<' . @a . '\>'
-  " Replace that occurence with the text we yanked
-  exec ':.s/\<' . @a . '\>/' . @b
+
+  " Find the start and end of the current block
+  " TODO: tidy up if no matching 'def' found (start would be 0 atm)
+  let [block_start, block_end] = common#get_range_for_block('\<def\>','Wb')
+
+  " Rename the variable within the range of the block
+  call common#gsub_all_in_range(block_start, block_end, '\<' . @a . '\>', @b)
+
+  " Put bck original register contents
+  let @a = original_a
+  let @b = original_b
 endfunction
