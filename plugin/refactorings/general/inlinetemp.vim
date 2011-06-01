@@ -3,6 +3,7 @@
 function! InlineTemp()
   " Copy the variable under the cursor into the 'a' register
   " XXX: How do I copy into a variable so I don't pollute the registers?
+  let original_a = @a
   normal "ayiw
 
   " It takes 4 diws to get the variable, equal sign, and surrounding
@@ -10,6 +11,7 @@ function! InlineTemp()
   " respect.
   normal 4diw
   " Delete the expression into the 'b' register
+  let original_b = @b
   normal "bd$
 
   " Delete the remnants of the line
@@ -21,5 +23,9 @@ function! InlineTemp()
   " Find the next occurence of the variable
   exec '/\<' . @a . '\>'
   " Replace that occurence with the text we yanked
-  exec ':.s/\<' . @a . '\>/' . @b
+  exec ':.s/\<' . @a . '\>/' . @b .'/g'
+
+  " Put bck original register contents
+  let @a = original_a
+  let @b = original_b
 endfunction
