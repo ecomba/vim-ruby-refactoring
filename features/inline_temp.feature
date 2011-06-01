@@ -51,7 +51,7 @@ Feature: Inline Temp :RInlineTemp
       y = x + 1
     end
     """
-    When I select "x = 5" and execute:
+    When I go to line "2" and execute:
     """
     :RInlineTemp
     """
