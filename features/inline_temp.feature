@@ -37,7 +37,6 @@ Feature: Inline Temp :RInlineTemp
 
     """
 
-  @issues @wip
   Scenario: Inline a temporary variable to all variables within the context of a method
     Given I have the following code:
     """
@@ -67,9 +66,9 @@ Feature: Inline Temp :RInlineTemp
       x = 2
       y = x + 1
     end
+
     """
 
-  @issues
   Scenario: Inline a temporary variable to all variables within the context of a method
     Given I have the following code:
     """
@@ -87,4 +86,5 @@ Feature: Inline Temp :RInlineTemp
     foo = 5 + 10
     x = 10
     bar = x + 10
+
     """
