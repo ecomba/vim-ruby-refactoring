@@ -89,22 +89,22 @@ Feature: Inline Temp :RInlineTemp
 
     """
 
-  @wip
   Scenario: Inline a temporary variable to all variables within the context of a method
     Given I have the following code:
     """
     a = 1
-    b = a+1
+    b = a + 1
     a = 2
-    c = a+1
+    c = a + 1
     """
     When I go to line "3" and execute:
     """
-    :RinlineTemp
+    :RInlineTemp
     """
     Then I should see:
     """
     a = 1
-    b = a+1
-    c = 2+1
+    b = a + 1
+    c = 2 + 1
+
     """
