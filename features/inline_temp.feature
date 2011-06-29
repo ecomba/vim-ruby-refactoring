@@ -108,3 +108,19 @@ Feature: Inline Temp :RInlineTemp
     c = 2 + 1
 
     """
+
+  @issues
+  Scenario: Inline a temporary variable to a value within a string
+    Given I have the following code:
+    """
+    then = 2006
+    word  = "#{then}-01-01"
+    """
+    When I go to the line and execute:
+    """
+    :RInlineTemp
+    """
+    Then I should see:
+    """
+    word  = "2006-01-01"
+    """
