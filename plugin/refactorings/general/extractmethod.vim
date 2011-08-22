@@ -9,7 +9,7 @@ function! ExtractMethod() range
     return
   endtry
   
-  let [block_start, block_end] = common#get_range_for_block('\<def\>','Wb')
+  let [block_start, block_end] = common#get_range_for_block('\<def\|it\>','Wb')
 
   let pre_selection = join( getline(block_start+1,a:firstline-1), "\n" )
   let pre_selection_variables = s:ruby_determine_variables(pre_selection)
@@ -175,12 +175,16 @@ function! s:ruby_identify_variables( tuples )
     if tuple[0] == "ASSIGN"
       let assigned = deepcopy(referenced)
       let referenced = []
-    elseif tuple[0] == "VAR" 
+    elseif tuple[0] == "VAR" && !s:is_target_of_rspec_let(tuple[1])
       call add(referenced,tuple[1])
     endif
   endfor
 
   return [assigned, referenced]
+endfunction
+
+function! s:is_target_of_rspec_let(name)
+  return search('^\s*let\s*[(]\s*[:]' . a:name . '\s*[)]', 'Wbn') > 0
 endfunction
 
 " Synopsis:

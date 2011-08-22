@@ -86,3 +86,47 @@ Feature: Extract Method :RExtractMethod
     end
 
     """
+
+  @issue
+  Scenario: Extract in an rspec file does not add lets as parameters
+    Given I have the following code:
+    """
+    require 'bowling'
+    
+    describe Bowling,"score" do
+      let(:bowling) { Bowling.new }
+    
+      it "should return 0 when rolling all gutter balls" do
+        20.times do
+          bowling.roll 0
+        end
+        bowling.score.should == 0
+      end
+    end
+
+    """    
+    When I select the "20.times do" block and execute:
+    """
+    :RExtractMethod
+    """
+    And I fill in the parameter "roll_many"
+    Then I should see:
+    """
+    require 'bowling'
+    
+    describe Bowling,"score" do
+      let(:bowling) { Bowling.new }
+    
+      def roll_many
+        20.times do
+          bowling.roll 0
+        end
+      end
+    
+      it "should return 0 when rolling all gutter balls" do
+        roll_many
+        bowling.score.should == 0
+      end
+    end
+
+    """
