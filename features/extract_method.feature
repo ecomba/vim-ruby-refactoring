@@ -35,7 +35,7 @@ Feature: Extract Method :RExtractMethod
         @bar = foo
       end
 
-      def add(three,two)
+      def add(two, three)
         two + three
       end
 
@@ -44,7 +44,7 @@ Feature: Extract Method :RExtractMethod
         two = 2
         three = 3
         four = two + two
-        five = add(three,two)
+        five = add(two, three)
         six = five + one
       end
     end
@@ -127,6 +127,62 @@ Feature: Extract Method :RExtractMethod
         roll_many
         bowling.score.should == 0
       end
+    end
+
+    """
+
+  @issue
+  Scenario: Parameters to extracted method should be in the order they are declared in original method when declared on separate lines.
+    Given I have the following code:
+    """
+    def originalMethod
+      x = 1
+      y = 2
+      z = x + y
+    end
+
+    """    
+    When I select "x + y" and execute:
+    """
+    :RExtractMethod
+    """
+    And I fill in the parameter "add"
+    Then I should see:
+    """
+    def add(x, y)
+      x + y
+    end
+
+    def originalMethod
+      x = 1
+      y = 2
+      z = add(x, y)
+    end
+
+    """
+
+  @issue
+  Scenario: Parameters to extracted method should be in the order they are declared in original method when declared on same lines.
+    Given I have the following code:
+    """
+    def originalMethod(b, a)
+      c = a + b
+    end
+
+    """    
+    When I select "a + b" and execute:
+    """
+    :RExtractMethod
+    """
+    And I fill in the parameter "add"
+    Then I should see:
+    """
+    def add(b, a)
+      a + b
+    end
+
+    def originalMethod(b, a)
+      c = add(b, a)
     end
 
     """
