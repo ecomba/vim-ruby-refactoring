@@ -7,7 +7,7 @@ function! ExtractIntoRspecLet()
     echo "Can't find an assignment"
     return
   end
-  normal! "bdd
+  normal! dd
   exec "?^\\<describe\\|context\\>"
   normal! $p
   exec 's/\v([a-z_][a-zA-Z0-9_]*) \= (.+)/let(:\1) { \2 }'

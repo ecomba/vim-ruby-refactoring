@@ -7,16 +7,26 @@ function! ExtractLocalVariable()
     echo v:exception
     return
   endtry
-  " Enter visual mode (not sure why this is needed since we're already in
-  " visual mode anyway)
-  normal! gv
+  
+  call s:select_variable_contents()
 
   " Replace selected text with the variable name
   exec "normal c" . name
+
   " Define the variable on the line above
   exec "normal! O" . name . " = "
+
   " Paste the original selected text to be the variable value
   normal! $p
 endfunction
 
+function! s:select_variable_contents()
+  " select current word or re-establish selection
+  " (not sure why we need to re-select)
+  if (visualmode() == "")
+    normal! viw
+  else
+    normal! gv
+  endif
+endfunction
 

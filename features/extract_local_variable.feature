@@ -29,3 +29,29 @@ Feature: Extract Local Variable :RExtractLocalVariable
     end
     
     """
+
+  @issue
+  Scenario: Extract a single word without selecting it
+    Given I have the following code:
+    """
+    class Foo
+      def bar
+        20
+      end
+    end
+    """
+    When I place my cursor on the 2 in 20 and execute:
+    """
+    :RExtractLocalVariable"
+    """
+    And I fill in the parameter "local_variable"
+    Then I should see:
+    """
+    class Foo
+      def bar
+        local_variable = 20
+        local_variable
+      end
+    end
+    
+    """
