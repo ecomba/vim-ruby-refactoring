@@ -1,7 +1,4 @@
 require 'cucumber/rake/task'
-require 'fileutils'
-
-include FileUtils
 
 Cucumber::Rake::Task.new(:cucumber)
 namespace :cucumber do
@@ -15,7 +12,7 @@ namespace :cucumber do
   end
 end
 
-task :default => [:copyPluginFiles, :cucumber]
+task :default => :cucumber
 
 namespace :relish do
   task :push do
@@ -23,7 +20,3 @@ namespace :relish do
   end
 end
 
-task :copyPluginFiles do
-  cp_r "autoload/.", File.expand_path("~/.vim/autoload/")
-  cp_r "plugin/.", File.expand_path("~/.vim/plugin/")
-end
