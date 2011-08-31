@@ -35,10 +35,6 @@ Feature: Extract Method :RExtractMethod
         @bar = foo
       end
 
-      def add(two, three)
-        two + three
-      end
-
       def method_two
         one = 1
         two = 2
@@ -46,6 +42,10 @@ Feature: Extract Method :RExtractMethod
         four = two + two
         five = add(two, three)
         six = five + one
+      end
+
+      def add(two, three)
+        two + three
       end
     end
 
@@ -76,13 +76,13 @@ Feature: Extract Method :RExtractMethod
       ''
     end
 
-    def add_return_key
-      @commands << return_key
-    end
-
     def select_method
       @commands = ':normal gg'
       add_return_key
+    end
+
+    def add_return_key
+      @commands << return_key
     end
 
     """
@@ -116,16 +116,16 @@ Feature: Extract Method :RExtractMethod
     
     describe Bowling,"score" do
       let(:bowling) { Bowling.new }
+
+      it "should return 0 when rolling all gutter balls" do
+        roll_many
+        bowling.score.should == 0
+      end
     
       def roll_many
         20.times do
           bowling.roll 0
         end
-      end
-    
-      it "should return 0 when rolling all gutter balls" do
-        roll_many
-        bowling.score.should == 0
       end
     end
 
@@ -149,14 +149,14 @@ Feature: Extract Method :RExtractMethod
     And I fill in the parameter "add"
     Then I should see:
     """
-    def add(x, y)
-      x + y
-    end
-
     def originalMethod
       x = 1
       y = 2
       z = add(x, y)
+    end
+
+    def add(x, y)
+      x + y
     end
 
     """
@@ -177,12 +177,12 @@ Feature: Extract Method :RExtractMethod
     And I fill in the parameter "add"
     Then I should see:
     """
-    def add(b, a)
-      a + b
-    end
-
     def originalMethod(b, a)
       c = add(b, a)
+    end
+
+    def add(b, a)
+      a + b
     end
 
     """

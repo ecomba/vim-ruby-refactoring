@@ -36,7 +36,7 @@ function! ExtractMethod() range
     endif
   endfor
 
-  call s:em_insert_new_method(name, selection, parameters, retvals, block_start)
+  call s:em_insert_new_method(name, selection, parameters, retvals, block_end)
 endfunction
 
 function! s:sort_parameters_by_declaration(parameters)
@@ -234,7 +234,7 @@ endfunction
 
 " Synopsis:
 " Do the vim bit of creating the new method, and the call to it.
-function! s:em_insert_new_method(name, selection, parameters, retvals, block_start)
+function! s:em_insert_new_method(name, selection, parameters, retvals, block_end)
   " Remove last \n if it exists, as we're adding one on prior to the 'end'
   let has_trailing_newline = strridx(a:selection,"\n") == (strlen(a:selection) - 1) ? 1 : 0
 
@@ -249,15 +249,9 @@ function! s:em_insert_new_method(name, selection, parameters, retvals, block_sta
     let method_retvals = join(a:retvals,", ")
   endif
 
-  let method_lines = split("def " . a:name . method_params . "\n" . a:selection . (has_trailing_newline ? "" : "\n") . (len(a:retvals) > 0 ? "return " . method_retvals . "\n" : "") . "end\n", "\n", 1)
+  let method_lines = split( "\ndef " . a:name . method_params . "\n" . a:selection . (has_trailing_newline ? "" : "\n") . (len(a:retvals) > 0 ? "return " . method_retvals . "\n" : "") . "end", "\n", 1)
 
-  " Start a line above, as we're appending, not inserting
-  let start_line_number = a:block_start - 1
-
-  " Sanity check
-  if start_line_number < 0 
-    let start_line_number = 0
-  endif
+  let start_line_number = a:block_end - len(split(a:selection, "\n", 1)) + 1 
 
   " Insert new method
   call append(start_line_number, method_lines) 
@@ -277,7 +271,7 @@ function! s:em_insert_new_method(name, selection, parameters, retvals, block_sta
   normal V=
   
   " Indent new codeblock
-  exec "normal " . (start_line_number == 0 ? 1 : start_line_number) . "GV" . len(method_lines) . "j="
+  exec "normal " . (start_line_number+1) . "GV" . len(method_lines) . "j="
 
   " Jump back again, 
   call setpos(".", cursor_position)
