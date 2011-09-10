@@ -29,3 +29,30 @@ Feature: Extract Local Variable :RExtractLocalVariable
     end
     
     """
+
+    Scenario: Extract a local variable from a magic string with multiple references
+    Given I have the following code:
+    """
+    class Foo
+      def bar
+        some_func_call("some magic string")
+        some_var = "some magic string"
+      end
+    end
+    """
+    When I select "some magic string" and execute:
+    """
+    :RExtractLocalVariable"
+    """
+    And I fill in the parameter "local_variable"
+    Then I should see:
+    """
+    class Foo
+      def bar
+        local_variable = "some magic string"
+        some_func_call(local_variable)
+        some_var = local_variable
+      end
+    end
+    
+    """
