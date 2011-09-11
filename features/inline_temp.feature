@@ -124,3 +124,37 @@ Feature: Inline Temp :RInlineTemp
     """
     word  = "2006-01-01"
     """
+
+  @issue
+  Scenario: Inline temp in an rspec it when an arbitrary helper method exists
+    Given I have the following code:
+    """
+    describe "foo" do
+      def arbitrary
+        0
+      end
+
+      it "should allow puts" do
+        foo = 10
+        puts foo
+      end
+    end
+
+    """
+    When I go to line "7" and execute:
+    """
+    :RInlineTemp
+    """
+    Then I should see:
+    """
+    describe "foo" do
+      def arbitrary
+        0
+      end
+
+      it "should allow puts" do
+        puts 10
+      end
+    end
+
+    """

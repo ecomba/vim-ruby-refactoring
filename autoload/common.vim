@@ -39,6 +39,11 @@ function! common#get_range_for_block(pattern_start, flags)
   let cursor_position = getpos(".")
 
   let block_start = search(a:pattern_start, a:flags)
+
+  if (match(getline("."), "^\\s*it\\s\\+") == 0)
+    normal $
+  endif
+
   normal %
   let block_end = line(".")
 

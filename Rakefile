@@ -19,3 +19,4 @@ namespace :relish do
     `bundle exec relish push vim-ruby-refactoring`
   end
 end
+
