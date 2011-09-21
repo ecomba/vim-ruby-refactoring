@@ -10,6 +10,7 @@
 " Contributions from Stuart Gale (@bishboria)
 "
 " Some support functions borrowed from Luc Hermitte's lh-vim library
+" Also borrowed snake case function from tim popes vim-abloish plugin
 
 " Load all refactoring recipes
 exec 'runtime ' . expand('<sfile>:p:h') . '/refactorings/general/*.vim'
@@ -42,6 +43,7 @@ nnoremap <leader>rapn :RAddParameterNB<cr>
 nnoremap <leader>rit  :RInlineTemp<cr>
 nnoremap <leader>rel  :RExtractLet<cr>
 nnoremap <leader>rcpc :RConvertPostConditional<cr>
+nnoremap <leader>riv  :RIntroduceVariable<cr>
 
 vnoremap <leader>rec  :RExtractConstant<cr>
 vnoremap <leader>relv :RExtractLocalVariable<cr>
