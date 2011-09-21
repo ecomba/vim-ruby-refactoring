@@ -27,7 +27,7 @@ Feature: Extract Local Variable :RExtractLocalVariable
         local_variable
       end
     end
-    
+
     """
 
   @issue
@@ -53,5 +53,5 @@ Feature: Extract Local Variable :RExtractLocalVariable
         local_variable
       end
     end
-    
+
     """

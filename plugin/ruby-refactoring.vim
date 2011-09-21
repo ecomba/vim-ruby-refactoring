@@ -24,6 +24,7 @@ command! RAddParameterNB                call AddParameterNB()
 command! RInlineTemp                    call InlineTemp()
 command! RExtractLet                    call ExtractIntoRspecLet()
 command! RConvertPostConditional        call ConvertPostConditional()
+command! RIntroduceVariable             call IntroduceVariable()
 
 command! -range RExtractConstant        call ExtractConstant()
 command! -range RExtractLocalVariable   call ExtractLocalVariable()

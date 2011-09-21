@@ -17,7 +17,7 @@ Feature: Convert Post Conditional :RConvertPostConditional
     Then I should see:
     """
     if condition
-      do_something 
+      do_something
     end
 
     """
