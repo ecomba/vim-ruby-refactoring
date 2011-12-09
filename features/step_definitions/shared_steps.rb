@@ -7,7 +7,7 @@ When /^I fill in the parameter "([^"]*)"$/ do |parameter|
 end
 
 Then /^I should see:$/ do |result|
-  result_of_executing_the_commands.should == result
+  result_of_executing_the_commands.strip.should == result.strip
 end
 
 When /^I go to line "([^"]*)" and execute:$/ do |line, command|
