@@ -38,16 +38,21 @@ command! -range RExtractMethod          call ExtractMethod()
 " Default mappings are <leader>r followed by an acronym of the pattern's name
 " E.g. Extract Method is mapped to <leader>rem
 
-nnoremap <leader>rap  :RAddParameter<cr>
-nnoremap <leader>rapn :RAddParameterNB<cr>
-nnoremap <leader>rit  :RInlineTemp<cr>
-nnoremap <leader>rel  :RExtractLet<cr>
-nnoremap <leader>rcpc :RConvertPostConditional<cr>
-nnoremap <leader>riv  :RIntroduceVariable<cr>
+if !exists('g:ruby_refactoring_map_keys')
+  let g:ruby_refactoring_map_keys = 1
+endif
 
-vnoremap <leader>rec  :RExtractConstant<cr>
-vnoremap <leader>relv :RExtractLocalVariable<cr>
-vnoremap <leader>rrlv :RRenameLocalVariable<cr>
-vnoremap <leader>rriv :RRenameInstanceVariable<cr>
-vnoremap <leader>rem  :RExtractMethod<cr>
+if g:ruby_refactoring_map_keys
+  nnoremap <leader>rap  :RAddParameter<cr>
+  nnoremap <leader>rapn :RAddParameterNB<cr>
+  nnoremap <leader>rit  :RInlineTemp<cr>
+  nnoremap <leader>rel  :RExtractLet<cr>
+  nnoremap <leader>rcpc :RConvertPostConditional<cr>
+  nnoremap <leader>riv  :RIntroduceVariable<cr>
 
+  vnoremap <leader>rec  :RExtractConstant<cr>
+  vnoremap <leader>relv :RExtractLocalVariable<cr>
+  vnoremap <leader>rrlv :RRenameLocalVariable<cr>
+  vnoremap <leader>rriv :RRenameInstanceVariable<cr>
+  vnoremap <leader>rem  :RExtractMethod<cr>
+endif

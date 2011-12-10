@@ -56,6 +56,11 @@ Default bindings:
 :vnoremap <leader>rriv :RRenameInstanceVariable<cr>
 :vnoremap <leader>rem  :RExtractMethod<cr>
 
+Disable default bindings with:
+>
+    let g:ruby_refactoring_map_keys=0
+<
+
 ADDITIONAL USAGE EXAMPLES                   *rubyrefactoring-usageexamples*
 
 http://justinram.wordpress.com/2010/12/30/vim-ruby-refactoring-series/
