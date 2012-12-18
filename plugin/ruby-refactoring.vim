@@ -12,6 +12,10 @@
 " Some support functions borrowed from Luc Hermitte's lh-vim library
 " Also borrowed snake case function from tim popes vim-abloish plugin
 
+" This is a dependency for a few of the refactorings, and it's useful in
+" general, so just force load it, here:
+runtime macros/matchit.vim
+
 " Load all refactoring recipes
 exec 'runtime ' . expand('<sfile>:p:h') . '/refactorings/general/*.vim'
 
