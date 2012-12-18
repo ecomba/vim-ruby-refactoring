@@ -1,12 +1,3 @@
-GIT
-  remote: https://github.com/mattwynne/relish.git
-  revision: 311c11d7931e6056d3cfbbe638a3aa694f14ca56
-  specs:
-    relish (0.4.0)
-      archive-tar-minitar (~> 0.5.2)
-      json (~> 1.4.6)
-      rest-client (~> 1.6.1)
-
 GEM
   remote: http://rubygems.org/
   specs:
@@ -24,7 +15,12 @@ GEM
     json (1.4.6)
     macaddr (1.4.0)
       systemu (~> 2.2.0)
-    mime-types (1.16)
+    mime-types (1.19)
+    rake (10.0.3)
+    relish (0.6)
+      archive-tar-minitar (>= 0.5.2)
+      json (>= 1.4.6)
+      rest-client (>= 1.6.1)
     rest-client (1.6.7)
       mime-types (>= 1.16)
     robot-vim (1.1.0)
@@ -47,6 +43,7 @@ PLATFORMS
 
 DEPENDENCIES
   cucumber
-  relish!
+  rake
+  relish
   robot-vim
   rspec
