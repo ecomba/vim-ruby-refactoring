@@ -39,7 +39,7 @@ function! ConvertPostConditional()
     let is_three_lines = (last_line - first_line) == 2
     if is_three_lines
       " delete third line, cut first, paste after second, join, indent properly
-      normal jjddkkddpkJ==
+      normal jjddkddpkJ==
     else
       "echo "multi-line conditional contains 2+ statements, aborting"
     endif
