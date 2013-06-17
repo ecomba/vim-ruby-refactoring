@@ -21,7 +21,7 @@ I will go with it (clone at your own risk).
 
    N.B. 'Rename Local Variable', 'Rename Instance Variable' and 'ExtractMethod' require matchit.vim:
 
-[http://www.vim.org/scripts/script.php?script_id=39](http://relishapp.com/despo/vim-ruby-refactoring)
+[http://www.vim.org/scripts/script.php?script_id=39](http://www.vim.org/scripts/script.php?script_id=39)
    
 ## Implemented commands/patterns:
    
